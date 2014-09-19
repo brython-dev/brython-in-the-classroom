@@ -1,0 +1,38 @@
+body#cc {
+   /* display:none; */
+    visibility:hidden;
+}
+pre.editclass{ 
+   position: absolute;
+   top: 18px;
+   right: 2px;
+   bottom:2px;
+   left: 5px;
+   margin-bottom:0px !important;
+}
+h1#version{
+   color:#000033;
+   font-size:18px;
+   font-weight:normal;
+   display:inline;
+   float:left;
+   margin-left:5px;
+   margin-top:9px;
+   margin-bottom:2px;
+}
+div#loading{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+    width:150px; 
+    height: 150px;
+    z-index:100;
+    background: url(/images/loading.gif) no-repeat;
+    background-color: transparent;
+    visibility:visible;
+}
+.tabs-hide {
+  display:none !important;
+}

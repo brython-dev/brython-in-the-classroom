@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="Description" content="Execute Python3 Scripts Online via Brython"/>
+  <meta name="Keywords" content="Python Brython classroom classmate teaching learning" />
+
+  <link rel="stylesheet" type="text/css" href="/css/zocial.css">
+  <link rel="stylesheet" type="text/css" href="/css/easyui.css">
+  <link rel="stylesheet" type="text/css" href="/css/icon.css">
+
+  <script type="text/javascript" src="/js/jquery-1.8.1.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.ba-resize.min.js"></script>
+
+  <script src="http://d1n0x3qji82z53.cloudfront.net/src-min-noconflict/ace.js" 
+          type="text/javascript">
+  </script>
+
+  <script type="text/javascript" src="external/brython/brython.js"></script>
+  <script type="text/javascript" src="external/brython/py_VFS.js"></script>
+
+<!--
+  <script type="text/javascript" src="/js/google_drive.js"></script>
+-->
+
+  <style type="text/css">
+    #east {width:50%}
+  </style>
+
+  <script type="text/javascript">
+        $(function(){
+	   $(window).resize(function(){
+	      $('#container').layout('resize');
+	   });
+	});
+   </script>
+
+<script type="text/python">
+from browser import document, window
+from javascript import console, JSObject
+import time
+import sys
+import traceback
+
+import editor
+
+editors=editor.Editor('editortabs')
+
+def run():
+    #find selected Tab (and get its contents)
+    src=editors.getCurrentText()
+    document["myconsole"].value=''
+    t0 = time.perf_counter()
+    try:
+        exec(src,globals())
+        state = 1
+    except Exception as exc:
+        traceback.print_exc()
+        state = 0
+
+    print('<completed in %6.2f ms>' % ((time.perf_counter()-t0)*1000.0))
+    return state
+
+window.run=run
+def create_tab(content=""):
+    editors.add_editor()
+
+info = sys.implementation.version
+#document['brython_version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
+
+window.create_tab=create_tab
+</script>
+
+
+</head>
+<body id="container" class="easyui-layout"
+      onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
+    <div id="east" title=" "
+         data-options="region:'east',split:true">
+ 
+         <div class="easyui-tabs" data-options="fit:true">  
+           <div id="console_tab" title="console" data-options="fit:true">
+             <textarea id="myconsole" style="width:100%;height:100%"></textarea>
+           </div>
+           <div id="canvas_tab" title="canvas" data-options="fit:true">
+              <canvas id="mycanvas" data-options="fit:true" />
+           </div>
+           <div id="mydiv" title="div" data-options="fit:true"></div>
+         </div>
+    </div>
+    <div id="center" data-options="region:'center'">
+        <div class="easyui-tabs" id="editortabs" data-options="tools:'#tab-tools',fit:true">
+           <div id="west" title="Welcome"><pre id="mytest" class="editclass">Welcome to classmate!</pre></div>
+        </div>
+    </div>
+
+<div id="tab-tools">
+  <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-save'" onclick="javascript:alert('not implemented yet')"></a>
+  <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
+  <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
+  <a style="top:4px" onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})">
+    <svg width="16" height="16" id="menu_link">
+      <path d="M0,4 16,4" stroke="#95B8E7" stroke-width="3"/>
+      <path d="M0,8 16,8" stroke="#95B8E7" stroke-width="3"/>
+      <path d="M0,12 16,12" stroke="#95B8E7" stroke-width="3"/>
+    </svg>
+  </a>
+</div>
+
+ <div id="menu" class="easyui-menu" style="width:120px;">
+        <div onclick="create_tab()">New</div>
+        <div>
+            <span>Open</span>
+            <div style="width:150px;">
+                <div><b>Word</b></div>
+                <div>Excel</div>
+                <div>PowerPoint</div>
+                <div>
+                    <span>M1</span>
+                    <div style="width:120px;">
+                        <div>sub1</div>
+                        <div>sub2</div>
+                        <div>
+                            <span>Sub</span>
+                            <div style="width:80px;">
+                                <div onclick="javascript:alert('sub21')">sub21</div>
+                                <div>sub22</div>
+                                <div>sub23</div>
+                            </div>
+                        </div>
+                        <div>sub3</div>
+                    </div>
+                </div>
+                <div>
+                    <span>Window Demos</span>
+                    <div style="width:120px;">
+                        <div data-options="href:'window.html'">Window</div>
+                        <div data-options="href:'dialog.html'">Dialog</div>
+                        <div><a href="http://www.jeasyui.com" target="_blank">EasyUI</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!--
+        <div data-options="iconCls:'icon-save'">Save</div>
+        <div data-options="iconCls:'icon-save'">Save as</div>
+        <div data-options="iconCls:'icon-print',disabled:true">Print</div>
+-->
+        <div class="menu-sep"></div>
+        <div>Exit</div>
+
+</body>
+</html>
