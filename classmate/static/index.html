@@ -96,16 +96,12 @@ window.create_tab=create_tab
     </div>
 
 <div id="tab-tools">
-  <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-save'" onclick="javascript:alert('not implemented yet')"></a>
-  <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
-  <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
-  <a style="top:4px" onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})">
-    <svg width="16" height="16" id="menu_link">
-      <path d="M0,4 16,4" stroke="#95B8E7" stroke-width="3"/>
-      <path d="M0,8 16,8" stroke="#95B8E7" stroke-width="3"/>
-      <path d="M0,12 16,12" stroke="#95B8E7" stroke-width="3"/>
-    </svg>
-  </a>
+  <a href="javascript:void(0)" title="open file" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-open'" onclick="javascript:alert('not implemented yet')"></a>
+  <a href="javascript:void(0)" title="save file" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-save'" onclick="javascript:alert('not implemented yet')"></a>
+  <a href="javascript:void(0)" title="new tab" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
+  <a href="javascript:void(0)" title="run code" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
+  <a href="javascript:void(0)" title="menu" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-menu'" 
+     onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})"></a>
 </div>
 
  <div id="menu" class="easyui-menu" style="width:120px;">
