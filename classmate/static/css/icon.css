@@ -47,19 +47,32 @@
 	background:url('icons/languages.png') no-repeat center center;
 }
 .icon-compile{
-	background:url('icons/compile.png') no-repeat center center;
+	background:url('icons/media-playback-start.svg') no-repeat center center;
+        background-size: 20px 20px;
 }
 .icon-add{
-	background:url('icons/edit_add.png') no-repeat center center;
+	background:url('icons/document-new.svg') no-repeat center center;
+        background-size: 20px 20px;
 }
 .icon-edit{
 	background:url('icons/pencil.png') no-repeat center center;
 }
+.icon-open{
+	background:url('icons/document-open.svg') no-repeat center center;
+        background-size: 20px 20px;
+}
+
+.icon-menu{
+	background:url('icons/menu.svg') no-repeat center center;
+        background-size:16px 16px;
+}
+
 .icon-remove{
 	background:url('icons/edit_remove.png') no-repeat center center;
 }
 .icon-save{
-	background:url('icons/filesave.png') no-repeat center center;
+	background:url('icons/document-save.svg') no-repeat center center;
+        background-size: 20px 20px;
 }
 .icon-cut{
 	background:url('icons/cut.png') no-repeat center center;
