@@ -13,7 +13,7 @@ class FileSystem:
   #    #this really doesn't do anything
   #    pass
 
-  def listdir(self, directory):
+  def listdir(self, directory, callback):
       _results=[]
       for _filename in storage.keys():
           if _filename.startswith(directory):
@@ -23,20 +23,22 @@ class FileSystem:
 
       _results.sort()
 
-      return _results
+      callback(_results)
 
-  def read_file(self, filename):
-      return storage.getdefault(filename, None)
+  def read_file(self, filename, callback):
+      callback(storage.getdefault(filename, None))
 
-  def save_file(self, fileobj):
+  def save_file(self, fileobj, callback):
       assert isinstance(fileobj, FileObject.FileObject)
       assert fileobj.get_attribute('filename') is not None
 
       storage[fileobj.get_attribute('filename')]=fileobj.to_json()
+      callback(True)
 
   def rm_file(self, filename):
       if filename in storage.keys():
          del storage[filename]
+         callback(True)
          return
 
       #todo:should raise some type of error..
