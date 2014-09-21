@@ -43,17 +43,20 @@ class Editor:
       #set resize
       document[filename].bind('resize', lambda x: self._editors[filename].resize(True))
 
-  def _currentTabName(self):
+  def getCurrentTabName(self):
       _tab=self._jquery(self._tab_container).tabs('getSelected')
       return _tab.panel('options').title
-      #_tab=_tab.panel('options').tab
-      #console.log(_tab[0])
-      #_title=_tab[0].innerText
 
-      #return _title
+  def setCurrentTabName(self, name):
+      _currentName=self.getCurrentTabName()
+      _tab=self._jquery(self._tab_container).tabs('getSelected')
+      self.add_editor(filename=name, content=self.getCurrentText())
+      _tab=self._jquery(self._tab_container).tabs('close', _currentName)
+      
+      del self._editors[_currentName]
 
   def getCurrentText(self):
-      _title=self._currentTabName()
+      _title=self.getCurrentTabName()
       return self._editors[_title].getValue()
 
   # load a Python script

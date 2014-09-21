@@ -35,7 +35,9 @@
 	      $('#container').layout('resize');
 	   });
            $('#open_file_dialog').dialog('close');
+           $('#save_file_as_dialog').dialog('close');
 
+           /*
            var data=[ 
                      {'id': 0, 
                       'filename': 'root',
@@ -50,9 +52,24 @@
                     ]
            $('#open_file_treegrid').treegrid('loadData', data);
            $('#open_file_treegrid').treegrid('reload');
-
+           */
 	});
+
    </script>
+
+<script type="text/python">
+from javascript import console, JSObject
+from browser import window
+
+_jquery=JSObject(jQuery)
+
+def open_file_onRowClicked(row):
+    if row._isa_file:
+       document['open_file_textbox'].value=row.fullname
+
+_jquery('#open_file_treegrid').treegrid({'onClickRow': open_file_onRowClicked})
+
+</script>
 
 <script type="text/javascript">
 function display_message(message){
@@ -77,7 +94,7 @@ from javascript import console, JSObject
 import time
 import sys
 import traceback
-
+import json
 import editor
 
 editors=editor.Editor('editortabs')
@@ -89,6 +106,8 @@ import FileObject
 fs=filesystem.FileSystem('/classmate')
 
 display_message=JSObject(window.display_message)
+
+document["myconsole"].value=''  #clear console on load
 
 def run():
     #find selected Tab (and get its contents)
@@ -111,6 +130,23 @@ def create_tab(content=""):
 info = sys.implementation.version
 #document['brython_version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 
+
+def toolbar_open_file_dialog():
+    def cb(filelist):
+        console.log(filelist)
+        if filelist is None:
+           display_message('no files available')
+           return
+        #data=json.dumps(filelist)
+        #console.log(data) 
+        _jquery('#open_file_treegrid').treegrid('loadData', [filelist])
+        _jquery('#open_file_dialog').dialog('open')
+
+    document['open_file_textbox'].value=''
+    # go retrieve a list of files a person could open
+    fs.listdir('/', cb)
+
+
 def open_file():
     def cb(fileobj):
         if fileobj is None:  #there was an error (or file doesn't exist)
@@ -125,8 +161,19 @@ def open_file():
         else: #invalid fileobj, output error message
            console.log('invalid fileobj')
 
-    _filename="/classmate/myfile.py"
+    _filename=document["open_file_textbox"].value
+    #_filename="/classmate/myfile.py"
     fs.read_file(_filename, cb)
+
+    _jquery=JSObject(jQuery)
+    _jquery('#open_file_dialog').dialog('close')
+
+def save_file_as():
+    _jquery('#save_file_as_dialog').dialog('close')
+    _filename=document['save_file_as_textbox'].value
+    editors.setCurrentTabName(_filename)
+    save_file()
+
 
 def save_file():
     def callback(e):
@@ -137,7 +184,13 @@ def save_file():
            display_message('error saving file')
            console.log('error saving file')
 
-    _filename="/classmate/myfile.py"
+    _filename=editors.getCurrentTabName()
+    if _filename.startswith('Untitled-'):
+       # we need to prompt for a real name
+       _jquery('#save_file_as_dialog').dialog('open')
+       return
+
+    console.log(_filename)
     _src=editors.getCurrentText()
     _f=FileObject.FileObject()
     _f.set_attribute('filename', _filename)
@@ -149,6 +202,8 @@ window.run=run
 window.create_tab=create_tab
 window.open_file=open_file
 window.save_file=save_file
+window.save_file_as=save_file_as
+window.toolbar_open_file_dialog=toolbar_open_file_dialog
 </script>
 
 
@@ -176,8 +231,8 @@ window.save_file=save_file
 
 <div id="tab-tools">
   <a href="javascript:void(0)" title="open file" class="easyui-linkbutton" 
-     data-options="plain:true,iconCls:'icon-open'" 
-     onclick="$('#open_file_dialog').dialog('open')"></a>
+     data-options="plain:true,iconCls:'icon-open'"
+     onclick="toolbar_open_file_dialog()"</a>
   <a href="javascript:void(0)" title="save file" class="easyui-linkbutton" 
      data-options="plain:true,iconCls:'icon-save'" onclick="save_file()"></a>
   <a href="javascript:void(0)" title="new tab" class="easyui-linkbutton" 
@@ -237,14 +292,18 @@ window.save_file=save_file
       <table class="easyui-treegrid" id="open_file_treegrid"
              style="width:700px;height:250px"
              data-options="rownumbers:false, animate:true,
-             fitColumns:true,collapsible:true,idField:'id',treeField:'fieldname'">
+             fitColumns:true,collapsible:true,idField:'unique_id',
+             treeField:'name'">
          <thead>
              <tr>
-                <th data-options="field:'filename',width:300">Filename</th>
+                <th data-options="field:'name',width:300">Filename</th>
                 <th data-options="field:'modified_date',width:100">Modified Date</th>
              </tr>
          </thead>
       </table>
+
+      selected file:<input id="open_file_textbox" type="text" readonly
+                     style="width:300px">
   </div>
 
   <div id="dlg-buttons">
@@ -253,6 +312,20 @@ window.save_file=save_file
     <a href="javascript:void(0)" class="easyui-linkbutton"
        onclick="javascript:$('#open_file_dialog').dialog('close')">Close</a>
   </div>
+
+  <div class="easyui-dialog" id="save_file_as_dialog" title="Save file as.."
+       data-options="buttons:'#save_file_as_buttons'">
+
+       <input type="text" id="save_file_as_textbox" value="" width="100px">
+  </div>
+
+  <div id="save_file_as_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton"
+       onclick="save_file_as()">Save File</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton"
+       onclick="javascript:$('#open_file_dialog').dialog('close')">Close</a>
+  </div>
+
 
 </body>
 </html>
