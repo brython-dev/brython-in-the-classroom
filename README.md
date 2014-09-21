@@ -7,5 +7,4 @@ Brython compiler which can be used by teachers and students in a classroom setti
 classmate
 ---------
 
-Classmate is a web editor, which requires minimal setup by teachers and students.
-
+Classmate is a web based editor environment to create/edit python source code (via [brython](http://brython.info)), which requires little to no setup by teachers and students.
