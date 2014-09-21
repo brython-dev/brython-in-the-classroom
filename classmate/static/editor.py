@@ -19,8 +19,7 @@ class Editor:
          filename = "Untitled-%s" % self._tabcount
          self._tabcount+=1
 
-      #_content='<pre id="%s" class="editclass">%s</pre>'
-      _content='<pre id="%s" class="editclass" style="width:100%%;height:100%%">%s</pre>'
+      _content='<div id="%s" class="editclass" style="width:100%%;height:100%%">%s</div>'
       self._jquery(self._tab_container).tabs('add',
         {'title': filename,
          'content': _content % (filename, content), 
