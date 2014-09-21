@@ -36,6 +36,8 @@ class Editor:
       #_session.setUseWrapMode(true)
       _session.setTabSize(4)
 
+      _editor.focus()
+
       self._editors[filename]=_editor
 
       #set resize
