@@ -28,13 +28,48 @@
     #east {width:50%}
   </style>
 
+
   <script type="text/javascript">
         $(function(){
 	   $(window).resize(function(){
 	      $('#container').layout('resize');
 	   });
+           $('#open_file_dialog').dialog('close');
+
+           var data=[ 
+                     {'id': 0, 
+                      'filename': 'root',
+                      'modified_date': '2014-03-31',
+                      'children':
+                      [{'id': 1, 'filename': 'myprog.py', 
+                        'modified_date': '2014-09-14'},
+                       {'id': 2, 'filename': 'yourprogram.py', 
+                        'modified_date': '2014-10-14'}
+                      ]
+                     }
+                    ]
+           $('#open_file_treegrid').treegrid('loadData', data);
+           $('#open_file_treegrid').treegrid('reload');
+
 	});
    </script>
+
+<script type="text/javascript">
+function display_message(message){
+  $.messager.show({
+     title:'',
+     msg: message,
+     showType:'show',
+     height: 50,
+     style:{
+       left:0,
+       right:'',
+       top:'',
+       bottom:-document.body.scrollTop-document.documentElement.scrollTop,
+     }
+  });
+}
+</script>
 
 <script type="text/python">
 from browser import document, window
@@ -46,6 +81,14 @@ import traceback
 import editor
 
 editors=editor.Editor('editortabs')
+
+sys.path.append('libs/FileSystem')
+import local_storage_fs as filesystem
+import FileObject
+
+fs=filesystem.FileSystem('/classmate')
+
+display_message=JSObject(window.display_message)
 
 def run():
     #find selected Tab (and get its contents)
@@ -62,14 +105,50 @@ def run():
     print('<completed in %6.2f ms>' % ((time.perf_counter()-t0)*1000.0))
     return state
 
-window.run=run
 def create_tab(content=""):
     editors.add_editor()
 
 info = sys.implementation.version
 #document['brython_version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 
+def open_file():
+    def cb(fileobj):
+        if fileobj is None:  #there was an error (or file doesn't exist)
+           #show message saying file .
+           display_message('file not found')
+           console.log('file not found')
+        elif isinstance(fileobj, FileObject.FileObject):
+           #open new tab with file contents
+           editors.add_editor(filename=fileobj.get_attribute('filename'), 
+                              content=fileobj.get_attribute('contents'))
+           display_message('file loaded successfully.')
+        else: #invalid fileobj, output error message
+           console.log('invalid fileobj')
+
+    _filename="/classmate/myfile.py"
+    fs.read_file(_filename, cb)
+
+def save_file():
+    def callback(e):
+        if e == True:  #file was saved.
+           display_message('file saved successfully')
+           console.log('file saved successfully')
+        else:
+           display_message('error saving file')
+           console.log('error saving file')
+
+    _filename="/classmate/myfile.py"
+    _src=editors.getCurrentText()
+    _f=FileObject.FileObject()
+    _f.set_attribute('filename', _filename)
+    _f.set_attribute('contents', _src)
+
+    fs.save_file(_f, callback)
+
+window.run=run
 window.create_tab=create_tab
+window.open_file=open_file
+window.save_file=save_file
 </script>
 
 
@@ -81,7 +160,7 @@ window.create_tab=create_tab
  
          <div class="easyui-tabs" data-options="fit:true">  
            <div id="console_tab" title="console" data-options="fit:true">
-             <textarea id="myconsole" style="width:100%;height:100%"></textarea>
+             <textarea id="myconsole" style="width:98%;height:98%"></textarea>
            </div>
            <div id="canvas_tab" title="canvas" data-options="fit:true">
               <canvas id="mycanvas" data-options="fit:true" />
@@ -96,11 +175,17 @@ window.create_tab=create_tab
     </div>
 
 <div id="tab-tools">
-  <a href="javascript:void(0)" title="open file" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-open'" onclick="javascript:alert('not implemented yet')"></a>
-  <a href="javascript:void(0)" title="save file" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-save'" onclick="javascript:alert('not implemented yet')"></a>
-  <a href="javascript:void(0)" title="new tab" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
-  <a href="javascript:void(0)" title="run code" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
-  <a href="javascript:void(0)" title="menu" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-menu'" 
+  <a href="javascript:void(0)" title="open file" class="easyui-linkbutton" 
+     data-options="plain:true,iconCls:'icon-open'" 
+     onclick="$('#open_file_dialog').dialog('open')"></a>
+  <a href="javascript:void(0)" title="save file" class="easyui-linkbutton" 
+     data-options="plain:true,iconCls:'icon-save'" onclick="save_file()"></a>
+  <a href="javascript:void(0)" title="new tab" class="easyui-linkbutton" 
+     data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
+  <a href="javascript:void(0)" title="run code" class="easyui-linkbutton" 
+     data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
+  <a href="javascript:void(0)" title="menu" class="easyui-linkbutton" 
+     data-options="plain:true,iconCls:'icon-menu'" 
      onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})"></a>
 </div>
 
@@ -145,6 +230,29 @@ window.create_tab=create_tab
 -->
         <div class="menu-sep"></div>
         <div>Exit</div>
+  </div>
+
+  <div class="easyui-dialog" id="open_file_dialog" title="Open File.."
+       data-options="buttons:'#dlg-buttons'">
+      <table class="easyui-treegrid" id="open_file_treegrid"
+             style="width:700px;height:250px"
+             data-options="rownumbers:false, animate:true,
+             fitColumns:true,collapsible:true,idField:'id',treeField:'fieldname'">
+         <thead>
+             <tr>
+                <th data-options="field:'filename',width:300">Filename</th>
+                <th data-options="field:'modified_date',width:100">Modified Date</th>
+             </tr>
+         </thead>
+      </table>
+  </div>
+
+  <div id="dlg-buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton"
+       onclick="open_file()">Open File</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton"
+       onclick="javascript:$('#open_file_dialog').dialog('close')">Close</a>
+  </div>
 
 </body>
 </html>
