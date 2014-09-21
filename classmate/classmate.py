@@ -24,7 +24,7 @@ def run_local():
         os.nice(19)
     except Exception as error:
         print(error)
-    if sys.version < '3':
+    if sys.version_info[0] < 3:
         import BaseHTTPServer as server
         from CGIHTTPServer import CGIHTTPRequestHandler
     else:
