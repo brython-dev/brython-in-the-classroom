@@ -1,17 +1,10 @@
 import FileObject
 from browser.local_storage import storage
+from javascript import console
 
 class FileSystem:
   def __init__(self, root='/'):
       self._root=root
-      self._cwd=root
-
-  #def getcwd(self):
-  #    return self._cwd
-
-  #def mkdir(self, dir):
-  #    #this really doesn't do anything
-  #    pass
 
   def listdir(self, directory, callback):
       _results=[]
@@ -26,7 +19,15 @@ class FileSystem:
       callback(_results)
 
   def read_file(self, filename, callback):
-      callback(storage.getdefault(filename, None))
+      try:
+         _json=storage[filename]
+      except KeyError:
+         callback(None)
+         return
+
+      _f=FileObject.FileObject()
+      _f.from_json(_json)
+      callback(_f)
 
   def save_file(self, fileobj, callback):
       assert isinstance(fileobj, FileObject.FileObject)
@@ -35,10 +36,10 @@ class FileSystem:
       storage[fileobj.get_attribute('filename')]=fileobj.to_json()
       callback(True)
 
-  def rm_file(self, filename):
-      if filename in storage.keys():
-         del storage[filename]
-         callback(True)
-         return
-
-      #todo:should raise some type of error..
+  def rm_file(self, filename, callback):
+      try:
+        del storage[filename]
+        callback(True)
+      except:
+        pass
+        #todo:should raise some type of error..
