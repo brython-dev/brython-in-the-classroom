@@ -20,6 +20,8 @@
   <script type="text/javascript" src="external/brython/brython.js"></script>
   <script type="text/javascript" src="external/brython/py_VFS.js"></script>
 
+  <script type="text/javascript" src="custom_import_functions.js"></script>
+
 <!--
   <script type="text/javascript" src="/js/google_drive.js"></script>
 -->
@@ -209,7 +211,8 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
 
 </head>
 <body id="container" class="easyui-layout"
-      onload="brython({debug:1, cache:'none', static_stdlib_import:true})">
+      onload="brython({debug:1, cache:'none', static_stdlib_import:true,
+                       custom_import_funcs:[import_from_localStorage]})">
     <div id="east" title=" "
          data-options="region:'east',split:true">
  
