@@ -41,6 +41,7 @@ def run_on_the_cloud():
     """This function runs a Google App server on the cloud for development."""
     class MainPage(webapp2.RequestHandler):
         def get(self):
+            self.response.headers.add_header("Access-Control-Allow-Origin", "*")
             self.response.headers['Content-Type'] = 'text/plain'
 
     application = webapp2.WSGIApplication([('/', MainPage), ], debug=True)

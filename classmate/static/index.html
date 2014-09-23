@@ -38,23 +38,8 @@
 	   });
            $('#open_file_dialog').dialog('close');
            $('#save_file_as_dialog').dialog('close');
+           $('#open_url_dialog').dialog('close');
 
-           /*
-           var data=[ 
-                     {'id': 0, 
-                      'filename': 'root',
-                      'modified_date': '2014-03-31',
-                      'children':
-                      [{'id': 1, 'filename': 'myprog.py', 
-                        'modified_date': '2014-09-14'},
-                       {'id': 2, 'filename': 'yourprogram.py', 
-                        'modified_date': '2014-10-14'}
-                      ]
-                     }
-                    ]
-           $('#open_file_treegrid').treegrid('loadData', data);
-           $('#open_file_treegrid').treegrid('reload');
-           */
 	});
 
    </script>
@@ -97,13 +82,15 @@ import time
 import sys
 import traceback
 import json
-import editor
 
-editors=editor.Editor('editortabs')
+import editor
 
 sys.path.append('libs/FileSystem')
 import local_storage_fs as filesystem
 import FileObject
+
+_jquery=JSObject(jQuery)
+editors=editor.Editor('editortabs')
 
 fs=filesystem.FileSystem('/classmate')
 
@@ -167,7 +154,6 @@ def open_file():
     #_filename="/classmate/myfile.py"
     fs.read_file(_filename, cb)
 
-    _jquery=JSObject(jQuery)
     _jquery('#open_file_dialog').dialog('close')
 
 def save_file_as():
@@ -175,6 +161,26 @@ def save_file_as():
     _filename=document['save_file_as_textbox'].value
     editors.setCurrentTabName(_filename)
     save_file()
+
+def open_url():
+    _jquery('#open_url_dialog').dialog('close')
+    _filename=document['open_url_textbox'].value
+
+    import urllib.request
+    _fp, _url, _headers=urllib.request.urlopen(_filename)
+    _data=_fp.read()
+
+    if _data is None:  #there was an error (or URL doesn't exist)
+       #show message saying file .
+       display_message('URL not found')
+       console.log('URL not found')
+    elif isinstance(_data, str):
+       #open new tab with file contents
+       editors.add_editor(filename=_filename, 
+                          content=_data)
+       display_message('file loaded successfully.')
+    else: #invalid data, output error message
+       console.log('invalid URL')
 
 
 def save_file():
@@ -210,12 +216,13 @@ window.run=run
 window.create_tab=create_tab
 window.open_file=open_file
 window.save_file=save_file
+window.open_url=open_url
 window.save_file_as=save_file_as
 window.toolbar_open_file_dialog=toolbar_open_file_dialog
 </script>
 
-
 </head>
+
 <body id="container" class="easyui-layout"
       onload="brython({debug:1, cache:'none', static_stdlib_import:true,
                        custom_import_funcs:[import_from_localStorage]})">
@@ -258,33 +265,8 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
         <div>
             <span>Open</span>
             <div style="width:150px;">
-                <div><b>Word</b></div>
-                <div>Excel</div>
-                <div>PowerPoint</div>
-                <div>
-                    <span>M1</span>
-                    <div style="width:120px;">
-                        <div>sub1</div>
-                        <div>sub2</div>
-                        <div>
-                            <span>Sub</span>
-                            <div style="width:80px;">
-                                <div onclick="javascript:alert('sub21')">sub21</div>
-                                <div>sub22</div>
-                                <div>sub23</div>
-                            </div>
-                        </div>
-                        <div>sub3</div>
-                    </div>
-                </div>
-                <div>
-                    <span>Window Demos</span>
-                    <div style="width:120px;">
-                        <div data-options="href:'window.html'">Window</div>
-                        <div data-options="href:'dialog.html'">Dialog</div>
-                        <div><a href="http://www.jeasyui.com" target="_blank">EasyUI</a></div>
-                    </div>
-                </div>
+                <div onclick="toolbar_open_file_dialog()">Open File</div>
+                <div onclick="$('#open_url_dialog').dialog('open')">Open URL</div>
             </div>
         </div>
 <!--
@@ -335,6 +317,19 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
        onclick="javascript:$('#save_file_as_dialog').dialog('close')">Close</a>
   </div>
 
+
+  <div class="easyui-dialog" id="open_url_dialog" title="Open URL.."
+       data-options="buttons:'#open_url_buttons'">
+
+       <input type="text" id="open_url_textbox" value="" width="100px">
+  </div>
+
+  <div id="open_url_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton"
+       onclick="open_url()">Open URL</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton"
+       onclick="javascript:$('#open_url_dialog').dialog('close')">Close</a>
+  </div>
 
 </body>
 </html>
