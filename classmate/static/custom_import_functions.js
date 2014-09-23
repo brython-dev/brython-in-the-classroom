@@ -1,12 +1,9 @@
 var $B=__BRYTHON__
 function import_py_via_localStorage(module,path,package){
-    console.log(module)
-    console.log(path)
     // import Python module at specified path
     try{
-        var module_contents=localStorage[path]
-        if (module_contents === undefined) return null
-        //$download_module(module.name, path)
+        var file_contents=localStorage[path]
+        if (file_contents === undefined) return null
     }catch(err){
         return null
     }
@@ -20,8 +17,8 @@ function import_py_via_localStorage(module,path,package){
         mod_elts.pop()
         $B.imported[module.name].__package__ = mod_elts.join('.')
     }
-    console.log(module_contents)
-    return $B.run_py(module,path,module_contents)
+    _json=JSON.parse(file_contents)
+    return $B.run_py(module,path, _json.contents)
   }
 
 function import_from_localStorage(mod_name, origin, package){
@@ -33,9 +30,16 @@ function import_from_localStorage(mod_name, origin, package){
     for (var j=0; j < $B.path.length; j++) {
         if ($B.path[j].substring(0,4) == 'http') continue
         if ($B.path[j].substring(0,10) != '/classmate') {
-           root='/classmate/'+$B.path[j]
+           if ($B.path[j].substring(0,1) != '/') {
+              root='/classmate/'+$B.path[j]
+           } else {
+              root='/classmate'+$B.path[j]
+           }
         } else {
            root=$B.path[j]
+        }
+        if (root.substring(root.length, 1) == '/') {
+           root=root.substring(0,root.length-1)
         }
         var py_paths = [root+'/'+mod_path+'.py',
                         root+'/'+mod_path+'/__init__.py']
