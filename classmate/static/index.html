@@ -192,6 +192,12 @@ def save_file():
        _jquery('#save_file_as_dialog').dialog('open')
        return
 
+    if not _filename.startswith('/'):
+       _filename='/%s' % _filename
+
+    if not _filename.startswith('/classname'):
+       _filename='/classmate%s' % _filename
+
     console.log(_filename)
     _src=editors.getCurrentText()
     _f=FileObject.FileObject()
@@ -326,7 +332,7 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
     <a href="javascript:void(0)" class="easyui-linkbutton"
        onclick="save_file_as()">Save File</a>
     <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="javascript:$('#open_file_dialog').dialog('close')">Close</a>
+       onclick="javascript:$('#save_file_as_dialog').dialog('close')">Close</a>
   </div>
 
 
