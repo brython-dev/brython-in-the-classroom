@@ -5,13 +5,13 @@
   <meta name="Description" content="Execute Python3 Scripts Online via Brython"/>
   <meta name="Keywords" content="Python Brython classroom classmate teaching learning" />
 
-  <link rel="stylesheet" type="text/css" href="/css/zocial.css">
-  <link rel="stylesheet" type="text/css" href="/css/easyui.css">
-  <link rel="stylesheet" type="text/css" href="/css/icon.css">
+  <link rel="stylesheet" type="text/css" href="css/zocial.css">
+  <link rel="stylesheet" type="text/css" href="css/easyui.css">
+  <link rel="stylesheet" type="text/css" href="css/icon.css">
 
-  <script type="text/javascript" src="/js/jquery-1.8.1.min.js"></script>
-  <script type="text/javascript" src="/js/jquery.easyui.min.js"></script>
-  <script type="text/javascript" src="/js/jquery.ba-resize.min.js"></script>
+  <script type="text/javascript" src="js/jquery-1.8.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.ba-resize.min.js"></script>
 
   <script src="http://d1n0x3qji82z53.cloudfront.net/src-min-noconflict/ace.js" 
           type="text/javascript">
@@ -33,14 +33,14 @@
 
   <script type="text/javascript">
         $(function(){
-	   $(window).resize(function(){
-	      $('#container').layout('resize');
-	   });
+       $(window).resize(function(){
+          $('#container').layout('resize');
+       });
            $('#open_file_dialog').dialog('close');
            $('#save_file_as_dialog').dialog('close');
            $('#open_url_dialog').dialog('close');
 
-	});
+    });
 
    </script>
 
@@ -212,6 +212,11 @@ def save_file():
 
     fs.save_file(_f, callback)
 
+def clear_outputs():
+    document["myconsole"].value = ""
+    document["mycanvas"].text = ""
+    document["mydiv"].text = ""
+
 window.run=run
 window.create_tab=create_tab
 window.open_file=open_file
@@ -219,6 +224,7 @@ window.save_file=save_file
 window.open_url=open_url
 window.save_file_as=save_file_as
 window.toolbar_open_file_dialog=toolbar_open_file_dialog
+window.clear_outputs=clear_outputs
 </script>
 
 </head>
@@ -226,41 +232,47 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
 <body id="container" class="easyui-layout"
       onload="brython({debug:1, cache:'none', static_stdlib_import:true,
                        custom_import_funcs:[import_from_localStorage]})">
-    <div id="east" title=" "
-         data-options="region:'east',split:true">
- 
-         <div class="easyui-tabs" data-options="fit:true">  
-           <div id="console_tab" title="console" data-options="fit:true">
-             <textarea id="myconsole" style="width:98%;height:98%"></textarea>
-           </div>
-           <div id="canvas_tab" title="canvas" data-options="fit:true">
-              <canvas id="mycanvas" data-options="fit:true" />
-           </div>
-           <div id="mydiv" title="div" data-options="fit:true"></div>
-         </div>
+    
+    <div id="east" title=" " data-options="region:'east',split:true">
+        <div class="easyui-tabs" data-options="tools:'#tab-tools-output',fit:true">  
+            <div id="console_tab" title="console" data-options="fit:true">				
+                <textarea id="myconsole" style="width:98%;height:98%"></textarea>
+            </div>
+            <div id="canvas_tab" title="canvas" data-options="fit:true">
+                <canvas id="mycanvas" data-options="fit:true" />
+            </div>
+            <div id="mydiv" title="div" data-options="fit:true"></div>
+        </div>
     </div>
+    
+    <div id="tab-tools-output">
+        <a href="javascript:void(0)" title="clean output" class="easyui-linkbutton" 
+            data-options="plain:true,iconCls:'icon-clear-left'"
+            onclick="clear_outputs()">clean outputs</a>
+    </div>
+    
     <div id="center" data-options="region:'center'">
         <div class="easyui-tabs" id="editortabs" data-options="tools:'#tab-tools',fit:true">
-           <div id="west" title="Welcome"><pre id="mytest" class="editclass">Welcome to classmate!</pre></div>
+            <div id="west" title="Welcome"><pre id="mytest" class="editclass">Welcome to classmate!</pre></div>
         </div>
     </div>
 
-<div id="tab-tools">
-  <a href="javascript:void(0)" title="open file" class="easyui-linkbutton" 
-     data-options="plain:true,iconCls:'icon-open'"
-     onclick="toolbar_open_file_dialog()"</a>
-  <a href="javascript:void(0)" title="save file" class="easyui-linkbutton" 
-     data-options="plain:true,iconCls:'icon-save'" onclick="save_file()"></a>
-  <a href="javascript:void(0)" title="new tab" class="easyui-linkbutton" 
-     data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
-  <a href="javascript:void(0)" title="run code" class="easyui-linkbutton" 
-     data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
-  <a href="javascript:void(0)" title="menu" class="easyui-linkbutton" 
-     data-options="plain:true,iconCls:'icon-menu'" 
-     onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})"></a>
-</div>
+    <div id="tab-tools">
+        <a href="javascript:void(0)" title="open file" class="easyui-linkbutton" 
+            data-options="plain:true,iconCls:'icon-open'"
+            onclick="toolbar_open_file_dialog()"></a>
+        <a href="javascript:void(0)" title="save file" class="easyui-linkbutton" 
+            data-options="plain:true,iconCls:'icon-save'" onclick="save_file()"></a>
+        <a href="javascript:void(0)" title="new tab" class="easyui-linkbutton" 
+            data-options="plain:true,iconCls:'icon-add'" onclick="create_tab()"></a>
+        <a href="javascript:void(0)" title="run code" class="easyui-linkbutton" 
+            data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
+        <a href="javascript:void(0)" title="menu" class="easyui-linkbutton" 
+            data-options="plain:true,iconCls:'icon-menu'" 
+            onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})"></a>
+    </div>
 
- <div id="menu" class="easyui-menu" style="width:120px;">
+    <div id="menu" class="easyui-menu" style="width:120px;">
         <div onclick="create_tab()">New</div>
         <div>
             <span>Open</span>
@@ -269,67 +281,65 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
                 <div onclick="$('#open_url_dialog').dialog('open')">Open URL</div>
             </div>
         </div>
-<!--
-        <div data-options="iconCls:'icon-save'">Save</div>
-        <div data-options="iconCls:'icon-save'">Save as</div>
-        <div data-options="iconCls:'icon-print',disabled:true">Print</div>
--->
+    <!--
+            <div data-options="iconCls:'icon-save'">Save</div>
+            <div data-options="iconCls:'icon-save'">Save as</div>
+            <div data-options="iconCls:'icon-print',disabled:true">Print</div>
+    -->
         <div class="menu-sep"></div>
         <div>Exit</div>
-  </div>
+    </div>
 
-  <div class="easyui-dialog" id="open_file_dialog" title="Open File.."
-       data-options="buttons:'#dlg-buttons'">
-      <table class="easyui-treegrid" id="open_file_treegrid"
-             style="width:700px;height:250px"
-             data-options="rownumbers:false, animate:true,
-             fitColumns:true,collapsible:true,idField:'unique_id',
-             treeField:'name'">
-         <thead>
-             <tr>
-                <th data-options="field:'name',width:300">Filename</th>
-                <th data-options="field:'modified_date',width:100">Modified Date</th>
-             </tr>
-         </thead>
-      </table>
+    <div class="easyui-dialog" id="open_file_dialog" title="Open File.."
+        data-options="buttons:'#dlg-buttons'">
+        <table class="easyui-treegrid" id="open_file_treegrid"
+            style="width:700px;height:250px"
+            data-options="rownumbers:false, animate:true,
+            fitColumns:true,collapsible:true,idField:'unique_id',
+            treeField:'name'">
+            <thead>
+                <tr>
+                    <th data-options="field:'name',width:300">Filename</th>
+                    <th data-options="field:'modified_date',width:100">Modified Date</th>
+                </tr>
+            </thead>
+        </table>
 
-      selected file:<input id="open_file_textbox" type="text" readonly
-                     style="width:300px">
-  </div>
+        selected file:<input id="open_file_textbox" type="text" readonly
+                       style="width:300px">
+    </div>
 
-  <div id="dlg-buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="open_file()">Open File</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="javascript:$('#open_file_dialog').dialog('close')">Close</a>
-  </div>
+    <div id="dlg-buttons">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="open_file()">Open File</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="javascript:$('#open_file_dialog').dialog('close')">Close</a>
+    </div>
 
-  <div class="easyui-dialog" id="save_file_as_dialog" title="Save file as.."
-       data-options="buttons:'#save_file_as_buttons'">
+    <div class="easyui-dialog" id="save_file_as_dialog" title="Save file as.."
+        data-options="buttons:'#save_file_as_buttons'">
+        <input type="text" id="save_file_as_textbox" value="" width="100px">
+    </div>
 
-       <input type="text" id="save_file_as_textbox" value="" width="100px">
-  </div>
-
-  <div id="save_file_as_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="save_file_as()">Save File</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="javascript:$('#save_file_as_dialog').dialog('close')">Close</a>
-  </div>
+    <div id="save_file_as_buttons">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="save_file_as()">Save File</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="javascript:$('#save_file_as_dialog').dialog('close')">Close</a>
+    </div>
 
 
-  <div class="easyui-dialog" id="open_url_dialog" title="Open URL.."
-       data-options="buttons:'#open_url_buttons'">
+    <div class="easyui-dialog" id="open_url_dialog" title="Open URL.."
+        data-options="buttons:'#open_url_buttons'">
+            <input type="text" id="open_url_textbox" value="" width="100px">
+    </div>
 
-       <input type="text" id="open_url_textbox" value="" width="100px">
-  </div>
-
-  <div id="open_url_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="open_url()">Open URL</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton"
-       onclick="javascript:$('#open_url_dialog').dialog('close')">Close</a>
-  </div>
+    <div id="open_url_buttons">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="open_url()">Open URL</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="javascript:$('#open_url_dialog').dialog('close')">Close</a>
+    </div>
 
 </body>
 </html>
