@@ -69,7 +69,7 @@ class Editor:
       return self._editors[_title].setValue('')
 
 def write(data):
-    document["myconsole"].value += '%s' % data
+    document["pyconsole"].value += '%s' % data
 
 sys.stdout.write = write
 sys.stderr.write = write

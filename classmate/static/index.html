@@ -96,12 +96,12 @@ fs=filesystem.FileSystem('/classmate')
 
 display_message=JSObject(window.display_message)
 
-document["myconsole"].value=''  #clear console on load
+document["pyconsole"].value=''  #clear console on load
 
 def run():
     #find selected Tab (and get its contents)
     src=editors.getCurrentText()
-    document["myconsole"].value=''
+    document["pyconsole"].value=''
     t0 = time.perf_counter()
     try:
         exec(src,globals())
@@ -122,7 +122,6 @@ info = sys.implementation.version
 
 def toolbar_open_file_dialog():
     def cb(filelist):
-        console.log(filelist)
         if filelist is None:
            display_message('no files available')
            return
@@ -213,9 +212,9 @@ def save_file():
     fs.save_file(_f, callback)
 
 def clear_outputs():
-    document["myconsole"].value = ""
-    document["mycanvas"].text = ""
-    document["mydiv"].text = ""
+    document["pyconsole"].value = ""
+    document["pycanvas"].text = ""
+    document["pydiv"].text = ""
 
 window.run=run
 window.create_tab=create_tab
@@ -235,13 +234,13 @@ window.clear_outputs=clear_outputs
     
     <div id="east" title=" " data-options="region:'east',split:true">
         <div class="easyui-tabs" data-options="tools:'#tab-tools-output',fit:true">  
-            <div id="console_tab" title="console" data-options="fit:true">				
-                <textarea id="myconsole" style="width:98%;height:98%"></textarea>
+            <div id="console_tab" title="pyconsole" data-options="fit:true">				
+                <textarea id="pyconsole" style="width:98%;height:98%"></textarea>
             </div>
-            <div id="canvas_tab" title="canvas" data-options="fit:true">
-                <canvas id="mycanvas" data-options="fit:true" />
+            <div id="canvas_tab" title="pycanvas" data-options="fit:true">
+                <canvas id="pycanvas" data-options="fit:true" />
             </div>
-            <div id="mydiv" title="div" data-options="fit:true"></div>
+            <div id="pydiv" title="pydiv" data-options="fit:true"></div>
         </div>
     </div>
     
