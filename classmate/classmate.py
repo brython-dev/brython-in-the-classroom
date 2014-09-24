@@ -8,11 +8,24 @@
 # imports
 import sys
 import os
+import argparse
+
 try:
     import webapp2
 except Exception as error:
     webapp2 = None
     print(error)
+
+# port to be used if the server runs locally
+parser = argparse.ArgumentParser()
+parser.add_argument('--port', 
+    help="The port to be used by the local server")
+args = parser.parse_args()
+
+if args.port:
+	port = int(args.port)
+else:
+	port = 8000
 
 
 ###############################################################################
@@ -30,7 +43,7 @@ def run_local():
     else:
         import http.server as server
         from http.server import CGIHTTPRequestHandler
-    server_address, handler = ('', 8000), CGIHTTPRequestHandler
+    server_address, handler = ('', port), CGIHTTPRequestHandler
     httpd = server.HTTPServer(server_address, handler)
     print(("""Server running on port http://localhost:{}.
            """.format(server_address[1])))
