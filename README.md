@@ -2,9 +2,17 @@ brython-in-the-classroom
 ========================
 
 Brython in the classroom is an umbrella project, to develop tools running the
-Brython compiler which can be used by teachers and students in a classroom setting.
+Brython compiler that reduce the burden for teachers and students to
+access python resources.
 
-classmate
+pyschool
 ---------
 
-Classmate is a web based editor environment to create/edit python source code (via [brython](http://brython.info)), which requires little to no setup by teachers and students.
+[pyschool](http://pyschool.net) is a user friendly web based python code editor.
+
+pyschool is powered by [brython](http://brython.info), a python compiler 
+written in javascript and developed for a web browser environment.
+
+pyschool's primary objective is to create an education tool that 
+requires little to no setup and is free for teachers/students, and 
+thus reducing the burden to bring python to the classroom.
