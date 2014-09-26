@@ -38,10 +38,16 @@ class Editor:
         _editor = JSObject(ace).edit(filename)
         _session = _editor.getSession()
         _session.setMode("ace/mode/python")
-        _editor.setTheme("ace/theme/crimson_editor")
-        _session.setMode("ace/mode/python")
+        #_editor.setTheme("ace/theme/crimson_editor")
+        #_session.setMode("ace/mode/python")
         #_session.setUseWrapMode(true)
-        _session.setTabSize(4)
+        #_session.setTabSize(4)
+        _editor.setOptions({
+            'enableLiveAutocompletion': True,
+            'enableSnippets': True,
+            'highlightActiveLine': False,
+            'highlightSelectedWord': True
+        })
         _editor.focus()
 
         self._editors[filename] = _editor
