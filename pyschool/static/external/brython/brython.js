@@ -4061,7 +4061,7 @@ return root
 function brython(options){var _b_=$B.builtins
 $B.$py_src={}
 $B.$py_module_path={}
-$B.path_hooks=[]
+$B.meta_path=[]
 $B.modules={}
 $B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
 $B.$options={}
@@ -7059,7 +7059,7 @@ $B.JSConstructor=JSConstructor
 ;(function($B){$B.stdlib={}
 var js=['_posixsubprocess','time','__random','_ajax','modulefinder','json','_multiprocessing','_timer','builtins','marshal','_io','math','_websocket','javascript','_jsre','_os','_sys','_browser','_svg','hashlib','_html','ripemd160','sha256','hmac-sha3','hmac-sha512','aes','md5','sha1','rabbit-legacy','hmac-sha224','hmac-sha1','hmac-md5','hmac-sha256','hmac-sha384','hmac-ripemd160','sha224','sha512','rc4','pbkdf2','sha3','tripledes','rabbit','sha384']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['reprlib','_imp','posix','_warnings','decimal','_collections','gc','_struct','_functools','weakref','keyword','optparse','operator','_sysconfigdata','platform','_socket','sys','_io','itertools','sre_parse','_testcapi','_weakrefset','signal','_codecs','fnmatch','sre_constants','site','locale','this','datetime','stat','heapq','token','shutil','linecache','textwrap','types','bisect','binascii','genericpath','abc','subprocess','pyre','fractions','_string','calendar','pwd','_markupbase','_thread','VFS_import','_weakref','formatter','pydoc','tempfile','queue','string','codecs','_abcoll','copyreg','os','sre_compile','pickle','imp','re','select','traceback','_threading_local','_sre','random','socket','external_import','webbrowser','markdown2','_dummy_thread','functools','struct','tokenize','inspect','csv','copy','antigravity','tarfile','colorsys','_strptime','io','getopt','_random','atexit','sysconfig','numbers','Clib','errno','warnings','configparser','difflib','dis','pprint','posixpath','base64','_csv','threading','encodings.utf_8','encodings.aliases','html.entities','html.parser','pydoc_data.topics','collections.abc','multiprocessing.pool','multiprocessing.util','multiprocessing.process','multiprocessing.dummy.connection','browser.object_storage','browser.ajax','browser.timer','browser.websocket','browser.html','browser.indexed_db','browser.svg','browser.markdown','browser.session_storage','browser.local_storage','test.test_re','test.re_tests','test.pystone','test.regrtest','test.test_int','test.support','urllib.parse','urllib.request','ui.dialog','ui.widget','ui.progressbar','ui.slider','logging.handlers','logging.config','xml.dom.NodeFilter','xml.dom.minicompat','xml.dom.expatbuilder','xml.dom.xmlbuilder','xml.dom.domreg','xml.dom.minidom','xml.dom.pulldom','xml.sax._exceptions','xml.sax.xmlreader','xml.sax.expatreader','xml.sax.saxutils','xml.sax.handler','xml.parsers.expat','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.etree.ElementInclude','site-packages.test_sp','http.cookies','importlib.machinery','importlib._bootstrap','importlib.abc','importlib.util','unittest.signals','unittest.__main__','unittest.runner','unittest.mock','unittest.main','unittest.util','unittest.loader','unittest.result','unittest.suite','unittest.case','unittest.test.dummy','unittest.test.test_discovery','unittest.test.test_case','unittest.test.test_skipping','unittest.test._test_warnings','unittest.test.test_setups','unittest.test.test_program','unittest.test.test_assertions','unittest.test.support','unittest.test.test_functiontestcase','unittest.test.test_suite','unittest.test.test_runner','unittest.test.test_loader','unittest.test.test_result','unittest.test.test_break','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.support','unittest.test.testmock.testwith','unittest.test.testmock.testsentinel','unittest.test.testmock.testpatch','unittest.test.testmock.testmock']
+var pylist=['reprlib','_imp','posix','_warnings','decimal','_collections','gc','_struct','_functools','weakref','keyword','optparse','operator','_sysconfigdata','platform','_socket','sys','_io','itertools','sre_parse','_testcapi','_weakrefset','signal','_codecs','fnmatch','sre_constants','site','locale','this','datetime','stat','heapq','token','shutil','linecache','textwrap','types','bisect','binascii','genericpath','abc','subprocess','pyre','fractions','_string','calendar','pwd','_markupbase','_thread','VFS_import','_weakref','formatter','pydoc','tempfile','queue','string','codecs','_abcoll','copyreg','os','sre_compile','pickle','imp','re','select','traceback','_threading_local','_sre','random','socket','external_import','webbrowser','markdown2','_dummy_thread','functools','struct','tokenize','inspect','csv','copy','antigravity','tarfile','colorsys','_strptime','io','getopt','_random','atexit','sysconfig','numbers','Clib','errno','warnings','configparser','difflib','dis','pprint','posixpath','base64','_csv','threading','encodings.utf_8','encodings.aliases','html.entities','html.parser','pydoc_data.topics','collections.abc','multiprocessing.pool','multiprocessing.util','multiprocessing.process','multiprocessing.dummy.connection','browser.object_storage','browser.ajax','browser.timer','browser.websocket','browser.html','browser.indexed_db','browser.svg','browser.markdown','browser.session_storage','browser.local_storage','test.test_re','test.re_tests','test.pystone','test.regrtest','test.test_int','test.support','urllib.parse','urllib.request','ui.dialog','ui.widget','ui.progressbar','ui.slider','logging.handlers','logging.config','xml.dom.NodeFilter','xml.dom.minicompat','xml.dom.expatbuilder','xml.dom.xmlbuilder','xml.dom.domreg','xml.dom.minidom','xml.dom.pulldom','xml.sax._exceptions','xml.sax.xmlreader','xml.sax.expatreader','xml.sax.saxutils','xml.sax.handler','xml.parsers.expat','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.etree.ElementInclude','site-packages.test_sp','site-packages.zipfile','http.cookies','importlib.machinery','importlib._bootstrap','importlib.abc','importlib.util','unittest.signals','unittest.__main__','unittest.runner','unittest.mock','unittest.main','unittest.util','unittest.loader','unittest.result','unittest.suite','unittest.case','unittest.test.dummy','unittest.test.test_discovery','unittest.test.test_case','unittest.test.test_skipping','unittest.test._test_warnings','unittest.test.test_setups','unittest.test.test_program','unittest.test.test_assertions','unittest.test.support','unittest.test.test_functiontestcase','unittest.test.test_suite','unittest.test.test_runner','unittest.test.test_loader','unittest.test.test_result','unittest.test.test_break','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.support','unittest.test.testmock.testwith','unittest.test.testmock.testsentinel','unittest.test.testmock.testpatch','unittest.test.testmock.testmock']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
 var pkglist=['encodings','html','pydoc_data','collections','multiprocessing','multiprocessing.dummy','browser','test','urllib','ui','logging','xml','xml.dom','xml.sax','xml.parsers','xml.etree','http','importlib','unittest','unittest.test','unittest.test.testmock']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
@@ -10474,4 +10474,29 @@ return window.postMessage(msg,targetOrigin)
 $B.DOMNode=DOMNode
 $B.$DOMNode=$DOMNode
 $B.win=win
+})(__BRYTHON__)
+;(function($B){var _b_=$B.builtins
+function import_hooks(mod_name,origin,package){var module={name:mod_name,__class__:$B.$ModuleDict}
+$B.$import('sys','__main__')
+var $globals=$B.vars['__main__']
+var sys=$globals['sys']
+var _meta_path=_b_.getattr(sys,'meta_path')
+var _path=_b_.getattr(sys,'path')
+for(var i=0;i < _meta_path.length;i++){var _mp=_meta_path[i]
+for(var j=0;j < _path.length;j++){try{
+var _finder=_b_.getattr(_mp,'__call__')(mod_name,_path[j])
+var _loader=_b_.getattr(_b_.getattr(_finder,'find_module'),'__call__')()
+}catch(e){if(e.__name__=='ImportError'){
+continue
+}else{
+throw e
+}}
+if(_loader==_b_.None)continue 
+_module=_b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(mod_name)
+return $B.run_py({name: mod_name},_path[j],_module)
+}
+}
+return false
+}
+window.import_hooks=import_hooks
 })(__BRYTHON__)

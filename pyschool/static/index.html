@@ -20,29 +20,60 @@
   <script type="text/javascript" src="external/brython/brython.js"></script>
   <script type="text/javascript" src="external/brython/py_VFS.js"></script>
 
-  <script type="text/javascript" src="custom_import_functions.js"></script>
+<style type="text/css">
+#east {width:50%}
+iframe {padding: 0px; width:98%;height:98%;}
+</style>
 
-<!--
-  <script type="text/javascript" src="/js/google_drive.js"></script>
--->
+<script type="text/python" src="libs/importhooks/localstorage.py"></script>
 
-  <style type="text/css">
-    #east {width:50%}
-  </style>
-
-
-  <script type="text/javascript">
-        $(function(){
+<script type="text/javascript">
+    $(function(){
        $(window).resize(function(){
           $('#container').layout('resize');
        });
-           $('#open_file_dialog').dialog('close');
-           $('#save_file_as_dialog').dialog('close');
-           $('#open_url_dialog').dialog('close');
-
+           
+       $('#open_file_dialog').dialog('close');
+       $('#save_file_as_dialog').dialog('close');
+       $('#open_url_dialog').dialog('close');
     });
 
-   </script>
+/*
+function resize(outer, inner) {
+   console.log('resize', outer, inner)
+   console.log($('#'+outer))
+   console.log($('#'+outer).width())
+   console.log($('#'+outer).height())
+   $('#'+inner).width(Math.floor($('#'+outer).width()))
+   $('#'+inner).height(Math.floor($('#'+outer).height()))
+}
+
+$('#sandbox_tab').resize(resize('sandbox_tab', 'sandbox_iframe'))
+*/
+
+function resize_sandbox() {
+   console.log('resize_sandbox')
+     console.log('resize iframe contents')
+     var _iframe=document.getElementById('sandbox_iframe')
+     var _code=_iframe.contentWindow.document.getElementById('code')
+
+     var _sandbox_tab=document.getElementById('sandbox_tab')
+     console.log(_sandbox_tab)
+     console.log('height', $('#sandbox_tab').height())
+     _code.style.width=Math.floor($('#sandbox_tab').width()) +'px'
+     _code.style.height=Math.floor($('#sandbox_tab').height()) + 'px'
+}
+
+//$('#sandbox_tab').bind('resize', resize_iframe_contents())
+
+
+function mySelect(title, index) {
+  console.log(title)
+}
+
+function resize(e) { console.log(e)}
+ 
+</script>
 
 <script type="text/python">
 from javascript import console, JSObject
@@ -216,6 +247,7 @@ def clear_outputs():
     document["pycanvas"].text = ""
     document["pydiv"].text = ""
 
+
 window.run=run
 window.create_tab=create_tab
 window.open_file=open_file
@@ -230,10 +262,10 @@ window.clear_outputs=clear_outputs
 
 <body id="container" class="easyui-layout"
       onload="brython({debug:1, cache:'none', static_stdlib_import:true,
-                       custom_import_funcs:[import_from_localStorage]})">
+                       custom_import_funcs:[import_hooks]})">
     
     <div id="east" title=" " data-options="region:'east',split:true">
-        <div class="easyui-tabs" data-options="tools:'#tab-tools-output',fit:true">  
+        <div class="easyui-tabs" id="east-tabs" data-options="tools:'#tab-tools-output',fit:true">  
             <div id="console_tab" title="pyconsole" data-options="fit:true">				
                 <textarea id="pyconsole" style="width:98%;height:98%"></textarea>
             </div>
@@ -241,6 +273,11 @@ window.clear_outputs=clear_outputs
                 <canvas id="pycanvas" data-options="fit:true" />
             </div>
             <div id="pydiv" title="pydiv" data-options="fit:true"></div>
+            <div id="sandbox_tab" title="sandbox" onresize="resize_sandbox()"
+                 data-options="fit:true,onresize:'resize_sandbox()'">
+                <iframe id="sandbox_iframe" src="sandbox.html"
+                        onresize="resize_sandbox()"></iframe>
+            </div>
         </div>
     </div>
     
