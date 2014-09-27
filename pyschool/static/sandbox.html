@@ -9,12 +9,18 @@
 <script type="text/javascript" src="external/brython/version_info.js"></script>
 
 <style>
+html, body {
+padding: 0px;
+margin: 0px;
+}
 div,
 textarea {
+    padding: 0px;
     width:98%;
     height:100%;
 }
 .codeArea {
+  padding: 0;
   overflow: auto;
   background-color: #000000;
   color: #ffffff;
@@ -24,11 +30,11 @@ textarea {
   font-size: 14px;
 }
 
-html, body {height:100%,width:100%}
+## html, body {height:100%,width:100%}
 </style>
 
 </head>
-<body id="container" onresize="resize_codebox()" onload="brython(1)">
+<body id="sandbox" onload="brython(1)">
 
 <textarea id="code" class="codeArea"></textarea>
 
@@ -42,7 +48,6 @@ from browser import window as win
 history = []
 current = 0
 
-
 def write(data):
     doc['code'].value += data
 
@@ -52,7 +57,7 @@ _status = "main" # or "block" if typing inside a block
 
 def cursorToEnd(*args):
     pos = len(doc['code'].value)
-    doc['code'].setSelectionRange(pos,pos)
+    #doc['code'].setSelectionRange(pos,pos)  # causes nsresult error
 
 def get_col(area):
     # returns the column num of cursor
@@ -181,16 +186,14 @@ doc['code'].focus()
 cursorToEnd()
 
 def resize_codebox(*args):
-    from javascript import console
-    console.log('resize')
-    console.log(doc['container'].width)
-    console.log(doc['container'].height)
-    doc['code'].style.width='%spx' % doc['container'].width
-    doc['code'].style.height='%spx' % doc['container'].height
+    doc['code'].style.width='%spx' % int(win.innerWidth * 0.98)
+    doc['code'].style.height='%spx' % int(win.innerHeight * 0.98)
 
 win.resize_codebox=resize_codebox
 
 win.bind('resize', resize_codebox)
+doc.body.bind('resize', resize_codebox)
+doc.body.bind('load', resize_codebox)
 </script>
 
 </body>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<title>PySchool.net</title>
 <head>
   <meta charset="UTF-8">
   <meta name="Description" content="Execute Python3 Scripts Online via Brython"/>
@@ -29,7 +30,7 @@ iframe {padding: 0px; width:98%;height:98%;}
 <script type="text/python" src="libs/importhooks/localstorage.py"></script>
 
 <script type="text/javascript">
-    $(function(){
+$(function(){
        $(window).resize(function(){
           $('#container').layout('resize');
        });
@@ -37,43 +38,8 @@ iframe {padding: 0px; width:98%;height:98%;}
        $('#open_file_dialog').dialog('close');
        $('#save_file_as_dialog').dialog('close');
        $('#open_url_dialog').dialog('close');
-    });
 
-/*
-function resize(outer, inner) {
-   console.log('resize', outer, inner)
-   console.log($('#'+outer))
-   console.log($('#'+outer).width())
-   console.log($('#'+outer).height())
-   $('#'+inner).width(Math.floor($('#'+outer).width()))
-   $('#'+inner).height(Math.floor($('#'+outer).height()))
-}
-
-$('#sandbox_tab').resize(resize('sandbox_tab', 'sandbox_iframe'))
-*/
-
-function resize_sandbox() {
-   console.log('resize_sandbox')
-     console.log('resize iframe contents')
-     var _iframe=document.getElementById('sandbox_iframe')
-     var _code=_iframe.contentWindow.document.getElementById('code')
-
-     var _sandbox_tab=document.getElementById('sandbox_tab')
-     console.log(_sandbox_tab)
-     console.log('height', $('#sandbox_tab').height())
-     _code.style.width=Math.floor($('#sandbox_tab').width()) +'px'
-     _code.style.height=Math.floor($('#sandbox_tab').height()) + 'px'
-}
-
-//$('#sandbox_tab').bind('resize', resize_iframe_contents())
-
-
-function mySelect(title, index) {
-  console.log(title)
-}
-
-function resize(e) { console.log(e)}
- 
+});
 </script>
 
 <script type="text/python">
@@ -148,9 +114,8 @@ def run():
 def create_tab(content=""):
     editors.add_editor()
 
-info = sys.implementation.version
+#info = sys.implementation.version
 #document['brython_version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
-
 
 def toolbar_open_file_dialog():
     def cb(filelist):
@@ -235,7 +200,6 @@ def save_file():
     if not _filename.startswith('/classname'):
        _filename='/classmate%s' % _filename
 
-    console.log(_filename)
     _src=editors.getCurrentText()
     _f=FileObject.FileObject()
     _f.set_attribute('filename', _filename)
@@ -262,7 +226,7 @@ window.clear_outputs=clear_outputs
 </head>
 
 <body id="container" class="easyui-layout"
-      onload="brython({debug:1, cache:'none', static_stdlib_import:true,
+      onload="brython({debug:1, cache:'version', static_stdlib_import:true,
                        custom_import_funcs:[import_hooks]})">
     
     <div id="east" title=" " data-options="region:'east',split:true">
@@ -274,11 +238,10 @@ window.clear_outputs=clear_outputs
                 <canvas id="pycanvas" data-options="fit:true" />
             </div>
             <div id="pydiv" title="pydiv" data-options="fit:true"></div>
-            <div id="sandbox_tab" title="sandbox" onresize="resize_sandbox()"
-                 data-options="fit:true,onresize:'resize_sandbox()'">
+            <div id="sandbox_tab" title="sandbox" data-options="fit:true">
                 <iframe id="sandbox_iframe" src="sandbox.html"
-                        onresize="resize_sandbox()"></iframe>
-            </div>
+                        style="frameborder:0"></iframe>
+           </div>
         </div>
     </div>
     
