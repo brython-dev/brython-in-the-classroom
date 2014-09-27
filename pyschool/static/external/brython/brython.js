@@ -15,6 +15,14 @@ $B.__setattr__=function(attr,value){
 if(['debug'].indexOf(attr)>-1){$B[attr]=value}
 else{throw $B.builtins.AttributeError('__BRYTHON__ object has no attribute '+attr)}}
 $B.language=window.navigator.userLanguage ||window.navigator.language
+$B.requestFullScreen=document.documentElement.requestFullScreen ||
+document.documentElement.msRequestFullScreen ||
+document.documentElement.mozRequestFullScreen ||
+document.documentElement.webkitRequestFullScreen
+$B.exitFullScreen=document.exitFullScreen ||
+document.msExitFullScreen ||
+document.mozExitFullScreen ||
+document.webkitExitFullScreen
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"
 $B.date=function(){if(arguments.length===0)return $B.JSObject(new Date())
 if(arguments.length===1)return $B.JSObject(new Date(arguments[0]))
@@ -10496,7 +10504,7 @@ _module=_b_.getattr(_b_.getattr(_loader,'load_module'),'__call__')(mod_name)
 return $B.run_py({name: mod_name},_path[j],_module)
 }
 }
-return false
+return null
 }
 window.import_hooks=import_hooks
 })(__BRYTHON__)
