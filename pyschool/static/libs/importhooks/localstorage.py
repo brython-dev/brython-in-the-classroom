@@ -11,7 +11,7 @@ class LocalStorageHook:
       for _ext in ('.py', '/__init__.py'):
           try:
              _modpath='%s/%s%s' % (self._path, self._fullname, _ext)
-             print('search path: %s' % _modpath)
+             #print('search path: %s' % _modpath)
              self._module=storage[_modpath]
              return self
           except:
