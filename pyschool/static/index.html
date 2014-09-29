@@ -270,7 +270,7 @@ function login_type_onChange(e) {
                        custom_import_funcs:[import_hooks]})">
     
     <div id="east" title=" "
-         data-options="region:'east',split:true,tools:'#global-tools',toolPosition:'left'">
+         data-options="region:'east',split:true">
         <div class="easyui-tabs" id="east-tabs"
              data-options="tools:'#tab-tools-output',fit:true">  
             <div id="console_tab" title="pyconsole" data-options="fit:true">
@@ -287,14 +287,6 @@ function login_type_onChange(e) {
         </div>
     </div>
     
-    <div id="global-tools">
-        <a href="javascript:void(0)" title="Full Screen Toggle" 
-           class="easyui-linkbutton"
-           data-options="iconCls:'icon-full-screen-toggle'"
-           onclick="full_screen_toggle()"></a>
-        <span class="button-sep"></span>
-    </div>
-
     <div id="tab-tools-output">
         <a href="javascript:void(0)" title="clean output" 
            class="easyui-linkbutton" 
@@ -330,6 +322,13 @@ function login_type_onChange(e) {
             <div style="width:150px;">
                 <div onclick="toolbar_open_file_dialog()">Open File</div>
                 <div onclick="$('#open_url_dialog').dialog('open')">Open URL</div>
+            </div>
+        </div>
+        <div>
+            <span>Properties</span>
+            <div style="width:150px;">
+                <div data-options="iconCls:'icon-full-screen-toggle'"
+                     onclick="full_screen_toggle()">Toggle Full Screen</div>
             </div>
         </div>
     <!--
