@@ -1,103 +1,56 @@
-import FileObject
 from browser.local_storage import storage
+import FileSystemBase
+
 from javascript import console
 
-unique_id=0
+class FileSystem(FileSystemBase.FileSystem):
+  def __init__(self, root):
+      FileSystemBase.FileSystem.__init__(self, root)
 
-class FileSystemNode:
-  def __init__(self, name):
-      global unique_id
-      self.unique_id=unique_id
-      unique_id+=1
-      self._isa_dir=False
-      self._isa_file=False
-      self.children=[]
-      self.name=name
-      self.modified_date='1900-01-01'
-      self.fullname=None
-
-  def isa_dir(self):
-      return self._isa_dir
-
-  def children(self):
-      return self.children
-
-  def get_child(self, name):
-      for _child in self.children:
-          if _child.name == name:
-             return _child
-
-      #if we get here, there is no child by that name
-      _child=FileSystemNode(name)
-      self.children.append(_child)
-      return _child 
-  
-
-class FileSystem:
-  def __init__(self, root='/'):
-      self._root=root
-
-  def _prefix_check(self, name):
-      if name.startswith(self._root):
-         return name
-
-      if name.startswith('/'):
-         name=name[1:]
-
-      return "%s/%s" % (self._root, name)
-
-  def listdir(self, directory, callback):
-      directory=self._prefix_check(directory)
-
-      _root=FileSystemNode(name='/')
-      _root._isa_dir=True
-
-      for _filename in storage.keys():
-          if _filename.startswith(directory):
-             console.log(_filename)
-             _file=_filename[len(directory):]
-             _dirs=_file.split('/')
-
-             _pos=_root
-             for _dir in _dirs:
-                 _pos=_pos.get_child(_dir)
-                 _pos._isa_dir=_dir != _dirs[-1]
-                 _pos._isa_file=not _pos._isa_dir
-
-                 if _pos._isa_file:
-                    _pos.fullname=_filename
-      
-      callback(_root)
-
-  def read_file(self, filename, callback):
-      filename=self._prefix_check(filename)
+  def _list_files(self):
+      """ returns a list of files this person has on storage,
+          return empty list [] if unsuccessful
+      """
       try:
-         _json=storage[filename]
-      except KeyError:
-         callback(None)
-         return
-
-      _f=FileObject.FileObject()
-      _f.from_json(_json)
-      callback(_f)
-
-  def save_file(self, fileobj, callback):
-      assert isinstance(fileobj, FileObject.FileObject)
-
-      _filename=fileobj.get_attribute('filename')
-      assert _filename is not None
-
-      _filename=self._prefix_check(_filename)
-
-      storage[_filename]=fileobj.to_json()
-      callback(True)
-
-  def rm_file(self, filename, callback):
-      filename=self._prefix_check(filename)
-
-      try:
-        del storage[filename]
-        callback(True)
+        return storage.keys()
       except:
         pass
-        #todo:should raise some type of error..
+
+      return []
+
+  def _read_file(self, filename):
+      """ retrieves file from storage, returns fileobj if successful,
+          return None if unsuccessful
+      """
+      try:
+        _json=storage[filename]
+      except KeyError:
+        return None
+
+      _f=FileSystemBase.FileObject()
+      _f.from_json(_json)
+      return _f
+
+  def _write_file(self, fileobj):
+      """saves a file to storage, returns True if save was successful,
+         False, if unsuccessful
+      """
+   
+      try:
+         storage[fileobj.get_attribute('filename')] = fileobj.to_json()
+      except:
+         return False
+
+      return True      
+      
+
+  def _rm_file(self, filename):
+      """removes a file in storage, returns True if delete was successful,
+         False, if unsuccessfull
+      """
+      try:
+         del storage[filename]
+      except KeyError:
+         return None
+
+      return True
