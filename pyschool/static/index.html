@@ -27,6 +27,12 @@
 <style type="text/css">
 #east {width:50%}
 iframe {padding: 0px; width:98%;height:98%;}
+.button-sep {
+  display:inline-block;
+  height: 16px;
+  width: 50px;
+  vertical-align:middle;
+}
 </style>
 
 <script type="text/python" src="libs/importhooks/localstorage.py"></script>
@@ -41,6 +47,8 @@ $(function(){
        $('#save_file_as_dialog').dialog('close');
        $('#open_url_dialog').dialog('close');
 
+       //eventually remove this line once database, etc are finished..
+       $('#login_dialog').dialog('close');
 });
 </script>
 
@@ -81,13 +89,13 @@ from javascript import console, JSObject
 import time
 import sys
 import traceback
-import json
+#import json
 
 import editor
 
 sys.path.append('libs/FileSystem')
 import local_storage_fs as filesystem
-import FileObject
+from FileSystemBase import FileSystemNode, FileObject
 
 _jquery=JSObject(jQuery)
 editors=editor.Editor('editortabs')
@@ -140,7 +148,7 @@ def open_file():
            #show message saying file .
            display_message('file not found')
            console.log('file not found')
-        elif isinstance(fileobj, FileObject.FileObject):
+        elif isinstance(fileobj, FileObject):
            #open new tab with file contents
            editors.add_editor(filename=fileobj.get_attribute('filename'), 
                               content=fileobj.get_attribute('contents'))
@@ -149,7 +157,6 @@ def open_file():
            console.log('invalid fileobj')
 
     _filename=document["open_file_textbox"].value
-    #_filename="/classmate/myfile.py"
     fs.read_file(_filename, cb)
 
     _jquery('#open_file_dialog').dialog('close')
@@ -215,6 +222,21 @@ def clear_outputs():
     document["pydiv"].text = ""
 
 
+def login():
+    console.log("do login stuff!")
+
+def full_screen_toggle():
+    global _full_screen
+
+    if _full_screen:
+       document.documentElement.mozRequestFullScreen()
+    else:
+       document.mozCancelFullScreen()
+
+    _full_screen=not _full_screen
+
+_full_screen=True
+
 window.run=run
 window.create_tab=create_tab
 window.open_file=open_file
@@ -223,6 +245,22 @@ window.open_url=open_url
 window.save_file_as=save_file_as
 window.toolbar_open_file_dialog=toolbar_open_file_dialog
 window.clear_outputs=clear_outputs
+window.login=login
+window.full_screen_toggle=full_screen_toggle
+</script>
+
+<script type="text/javascript">
+// easyui (data-options) cannot bind event functions defined via brython, 
+// so we must define the function in javascript instead
+function login_type_onChange(e) {
+    _selection=$('#login_type').combobox('getValue')
+
+    if (_selection == 'authenticate') {
+       $('#login_user_entry').show() // style.display='block'
+    } else {
+       $('#login_user_entry').hide() //style.display='none'
+    }
+}
 </script>
 
 </head>
@@ -231,9 +269,11 @@ window.clear_outputs=clear_outputs
       onload="brython({debug:1, cache:'version', static_stdlib_import:true,
                        custom_import_funcs:[import_hooks]})">
     
-    <div id="east" title=" " data-options="region:'east',split:true">
-        <div class="easyui-tabs" id="east-tabs" data-options="tools:'#tab-tools-output',fit:true">  
-            <div id="console_tab" title="pyconsole" data-options="fit:true">				
+    <div id="east" title=" "
+         data-options="region:'east',split:true,tools:'#global-tools',toolPosition:'left'">
+        <div class="easyui-tabs" id="east-tabs"
+             data-options="tools:'#tab-tools-output',fit:true">  
+            <div id="console_tab" title="pyconsole" data-options="fit:true">
                 <textarea id="pyconsole" style="width:98%;height:98%"></textarea>
             </div>
             <div id="canvas_tab" title="pycanvas" data-options="fit:true">
@@ -243,14 +283,23 @@ window.clear_outputs=clear_outputs
             <div id="sandbox_tab" title="sandbox" data-options="fit:true">
                 <iframe id="sandbox_iframe" src="sandbox.html"
                         style="frameborder:0"></iframe>
-           </div>
+            </div>
         </div>
     </div>
     
+    <div id="global-tools">
+        <a href="javascript:void(0)" title="Full Screen Toggle" 
+           class="easyui-linkbutton"
+           data-options="iconCls:'icon-full-screen-toggle'"
+           onclick="full_screen_toggle()"></a>
+        <span class="button-sep"></span>
+    </div>
+
     <div id="tab-tools-output">
-        <a href="javascript:void(0)" title="clean output" class="easyui-linkbutton" 
-            data-options="plain:true,iconCls:'icon-clear-left'"
-            onclick="clear_outputs()">clean outputs</a>
+        <a href="javascript:void(0)" title="clean output" 
+           class="easyui-linkbutton" 
+           data-options="plain:true,iconCls:'icon-clear-left'"
+           onclick="clear_outputs()">clean outputs</a>
     </div>
     
     <div id="center" data-options="region:'center'">
@@ -301,8 +350,8 @@ window.clear_outputs=clear_outputs
             treeField:'name'">
             <thead>
                 <tr>
-                    <th data-options="field:'name',width:300">Filename</th>
-                    <th data-options="field:'modified_date',width:100">Modified Date</th>
+                  <th data-options="field:'name',width:300">Filename</th>
+                  <th data-options="field:'modified_date',width:100">Modified Date</th>
                 </tr>
             </thead>
         </table>
@@ -330,7 +379,6 @@ window.clear_outputs=clear_outputs
             onclick="javascript:$('#save_file_as_dialog').dialog('close')">Close</a>
     </div>
 
-
     <div class="easyui-dialog" id="open_url_dialog" title="Open URL.."
         data-options="buttons:'#open_url_buttons'">
             <input type="text" id="open_url_textbox" value="" width="100px">
@@ -342,6 +390,32 @@ window.clear_outputs=clear_outputs
         <a href="javascript:void(0)" class="easyui-linkbutton"
             onclick="javascript:$('#open_url_dialog').dialog('close')">Close</a>
     </div>
+
+    <div class="easyui-dialog" id="login_dialog" title="Login"
+        data-options="buttons:'#login_buttons',width:400,height:200">
+          Login Type:
+          <select id="login_type" name="login_type1" class="easyui-combobox" 
+                  data-options="onChange:login_type_onChange">
+             <option value="guest">Login as guest</option>
+             <option value="authenticate">Login with userid/password</option>
+          </select>
+          <table id="login_user_entry" border="0" style="display:none">
+             <tr><td>Userid:</td>
+                 <td><input type="text" id="userid_textbox" value=""></td>
+             </tr>
+             <tr><td>Password:</td>
+                 <td><input type="password" id="password_textbox" value=""></td>
+             </tr>
+          </table>
+    </div>
+
+    <div id="login_buttons">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="login()">Login</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="javascript:$('#login_dialog').dialog('close')">Close</a>
+    </div>
+
 
 </body>
 </html>

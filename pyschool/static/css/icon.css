@@ -74,6 +74,10 @@
 	background:url('icons/document-save.svg') no-repeat center center;
         background-size: 20px 20px;
 }
+.icon-full-screen-toggle{
+	background:url('icons/view-fullscreen.svg') no-repeat center center;
+        background-size: 20px 20px;
+}
 .icon-cut{
 	background:url('icons/cut.png') no-repeat center center;
 }
