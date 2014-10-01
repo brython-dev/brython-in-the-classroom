@@ -1,22 +1,6 @@
 import json
 from javascript import console
-
-class FileObject:
-  def __init__(self, metadata={}):
-      assert isinstance(metadata, dict), "metadata must be a dictionary"
-      self._metadata=metadata
-
-  def get_attribute(self, name):
-      return self._metadata.get(name, None)
-
-  def set_attribute(self, name, value):
-      self._metadata[name]=value
-
-  def to_json(self):
-      return json.dumps(self._metadata)
-
-  def from_json(self, json_string):
-      self._metadata=json.loads(json_string)
+import FileObject
 
 unique_id=0
 
@@ -126,11 +110,11 @@ class FileSystem:
   def save_file(self, fileobj, callback):
       assert isinstance(fileobj, FileObject.FileObject)
 
-      _filename=fileobj.get_attribute('filename')
+      _filename=fileobj.get_filename()
       assert _filename is not None
 
       _filename=self._prefix_check(_filename)
-      fileobj.set_attribute('filename', _filename) #the name may have changed
+      fileobj.set_filename(_filename) #the name may have changed
       callback(self._write_file(_filename, fileobj))
 
   def rm_file(self, filename, callback):

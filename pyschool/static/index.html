@@ -48,7 +48,8 @@ $(function(){
        $('#open_url_dialog').dialog('close');
 
        //eventually remove this line once database, etc are finished..
-       $('#login_dialog').dialog('close');
+       //$('#login_dialog').dialog('close');
+       $('#signup_dialog').dialog('close');
 });
 </script>
 
@@ -89,7 +90,6 @@ from javascript import console, JSObject
 import time
 import sys
 import traceback
-#import json
 
 import editor
 
@@ -100,7 +100,7 @@ from FileSystemBase import FileSystemNode, FileObject
 _jquery=JSObject(jQuery)
 editors=editor.Editor('editortabs')
 
-fs=filesystem.FileSystem('/classmate')
+fs=filesystem.FileSystem('/pyschool')
 
 display_message=JSObject(window.display_message)
 
@@ -223,19 +223,37 @@ def clear_outputs():
 
 
 def login():
+    #fix me..
+    _jquery('#login_dialog').dialog('close')
+    return
+    #send userid/password
+    #receive token
+    if window.login_type == 'authenticate':
+       #send userid/password
+       import urllib.request
+       _url="/Auth?userid=abc&password=def"
+       _fp, _url, _headers=urllib.request.urlopen(_url)
+       _data=_fp.read()
+       console.log(_data)
+
+       storage_type="GoogleDataStore"
+    else:
+       storage_type="localStorage"
     console.log("do login stuff!")
 
 def full_screen_toggle():
     global _full_screen
 
-    if _full_screen:
+    if not _full_screen:
+       #fix me!
        document.documentElement.mozRequestFullScreen()
     else:
+       #fix me!
        document.mozCancelFullScreen()
 
     _full_screen=not _full_screen
 
-_full_screen=True
+_full_screen=False
 
 window.run=run
 window.create_tab=create_tab
@@ -254,7 +272,7 @@ window.full_screen_toggle=full_screen_toggle
 // so we must define the function in javascript instead
 function login_type_onChange(e) {
     _selection=$('#login_type').combobox('getValue')
-
+    window.login_type=__BRYTHON__.builtins.str(_selection)
     if (_selection == 'authenticate') {
        $('#login_user_entry').show() // style.display='block'
     } else {
@@ -275,9 +293,6 @@ function login_type_onChange(e) {
              data-options="tools:'#tab-tools-output',fit:true">  
             <div id="console_tab" title="pyconsole" data-options="fit:true">
                 <textarea id="pyconsole" style="width:98%;height:98%"></textarea>
-            </div>
-            <div id="canvas_tab" title="pycanvas" data-options="fit:true">
-                <canvas id="pycanvas" data-options="fit:true" />
             </div>
             <div id="pydiv" title="pydiv" data-options="fit:true"></div>
             <div id="sandbox_tab" title="sandbox" data-options="fit:true">
@@ -331,11 +346,6 @@ function login_type_onChange(e) {
                      onclick="full_screen_toggle()">Toggle Full Screen</div>
             </div>
         </div>
-    <!--
-            <div data-options="iconCls:'icon-save'">Save</div>
-            <div data-options="iconCls:'icon-save'">Save as</div>
-            <div data-options="iconCls:'icon-print',disabled:true">Print</div>
-    -->
         <div class="menu-sep"></div>
         <div>Exit</div>
     </div>
@@ -405,6 +415,10 @@ function login_type_onChange(e) {
              <tr><td>Password:</td>
                  <td><input type="password" id="password_textbox" value=""></td>
              </tr>
+             <tr><td colspan="2">Don't have an account? 
+                 <a href="javascript:void(0)" 
+                      onclick="$('#signup_dialog').dialog('open')">Sign up</a></td>
+             </tr>
           </table>
     </div>
 
@@ -413,6 +427,27 @@ function login_type_onChange(e) {
             onclick="login()">Login</a>
         <a href="javascript:void(0)" class="easyui-linkbutton"
             onclick="javascript:$('#login_dialog').dialog('close')">Close</a>
+    </div>
+
+    <div id="signup_dialog" class="easyui-dialog" title="Sign up.."
+        data-options="buttons:'#signup_buttons',width:400,height:200">
+          <table border="0">
+             <tr><td>Userid:</td>
+                 <td><input type="text" id="signup_userid_textbox" value=""></td>
+             </tr>
+             <tr><td>Password:</td>
+                 <td><input type="password" id="signup_password_textbox" value=""></td>
+             </tr>
+             <tr><td colspan="2"><span id="signup_message"></span></td>
+             </tr>
+          </table>
+    </div>
+
+    <div id="signup_buttons">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="login()">Login</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="javascript:$('#signup_dialog').dialog('close')">Close</a>
     </div>
 
 
