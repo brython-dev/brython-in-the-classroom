@@ -1,39 +1,34 @@
 # -*- coding: utf-8 -*-
 #
 
+"""Simple server that uses Local Pythons BaseHTTPServer.
 
-"""Simple server that uses Google App Or Local Pythons BaseHTTPServer."""
+To start pyschool locally just run:
 
+> python pyschool_local.py --port 8001
+
+The --port option is only necessary if you want to run the local server
+on a port different than 8000.
+
+It can bu used with python >= 2.7
+"""
 
 # imports
 import sys
 import os
 import argparse
 
-try:
-    import webapp2
-except Exception as error:
-    webapp2 = None
-    print(error)
 
-#sys.path.append('libs')
-#import CommandHandler
-#import GoogleDataStore
+# port to be used when the server runs locally
+parser = argparse.ArgumentParser()
+parser.add_argument('--port', 
+    help="The port to be used by the local server")
+args = parser.parse_args()
 
-# port to be used if the server runs locally
-if webapp2 is None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--port', 
-        help="The port to be used by the local server")
-    args = parser.parse_args()
-
-    if args.port:
-	    port = int(args.port)
-    else:
-	    port = 8000
-
-
-###############################################################################
+if args.port:
+    port = int(args.port)
+else:
+    port = 8000
 
 
 def run_local():
@@ -55,46 +50,5 @@ def run_local():
     httpd.serve_forever()
 
 
-def run_on_the_cloud():
-    """This function runs a Google App server on the cloud for development."""
-    import sys
-    sys.path.append('libs')
-    import GoogleDataStore
-
-    class MainPage(webapp2.RequestHandler):
-        def get(self):
-            self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-            self.response.headers['Content-Type'] = 'text/plain'
-
-    class Auth(webapp2.RequestHandler):
-        def get(self):
-            self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-            _token=GoogleDataStore.Authenticate(userid=self.request.get('userid'),
-                                                password=self.request.get('password')) 
-            self._response.write('token=%s' % _token)
-
-    class FileStorage(webapp2.RequestHandler):
-        def post(self):
-            token=self.request.get('token', None)
-            if token is None or len(token) < 32:
-               self.response.write('invalid token')
-               return
-
-            data=self.request.get('data')
-            _command=json.loads(data)
-
-            _gds=GoogleDataStore.GoogleDataStore(_command)
-
-            self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-            self.response.write(_gds.execute_command())
-
-    application = webapp2.WSGIApplication([('/', MainPage), 
-                 ('/FS', FileStorage), ('/Auth', Auth)], debug=True)
-
-
-###############################################################################
-
-
 if __name__ in '__main__':
-    print(__doc__)
-    run_local() if not webapp2 else run_on_the_cloud()
+    run_local()
