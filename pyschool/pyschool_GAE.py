@@ -7,8 +7,6 @@
 
 # imports
 import sys
-import os
-#import argparse
 import json
 
 import webapp2
@@ -17,7 +15,6 @@ sys.path.append('libs')
 import CommandHandler
 import GoogleDataStore
 
-import sys
 
 class MainPage(webapp2.RequestHandler):
         def get(self):
