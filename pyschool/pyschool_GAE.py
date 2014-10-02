@@ -2,7 +2,10 @@
 #
 
 
-"""Simple server that uses Google App Or Local Pythons BaseHTTPServer."""
+"""Simple server that uses Google App Engine to run pyschool.
+
+Only Python 2.7
+"""
 
 
 # imports
