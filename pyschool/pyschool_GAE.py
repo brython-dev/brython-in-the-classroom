@@ -2,13 +2,14 @@
 #
 
 
-"""Simple server that uses Google App Or Local Pythons BaseHTTPServer."""
+"""Simple server that uses Google App Engine to run pyschool.
+
+Only Python 2.7
+"""
 
 
 # imports
 import sys
-import os
-#import argparse
 import json
 
 import webapp2
@@ -17,7 +18,6 @@ sys.path.append('libs')
 import CommandHandler
 import GoogleDataStore
 
-import sys
 
 class MainPage(webapp2.RequestHandler):
         def get(self):
