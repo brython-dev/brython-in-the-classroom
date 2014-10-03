@@ -8,7 +8,6 @@
 # imports
 import sys
 import os
-#import argparse
 import json
 
 import webapp2
@@ -55,16 +54,25 @@ class CreateUserAccount(webapp2.RequestHandler):
 
 class FileStorage(webapp2.RequestHandler):
         def post(self):
-            token=self.request.get('token', None)
-            if token is None or len(token) < 32:
+            
+            #there is probably something wrong with brythons' ajax
+            #function that causes the post data to be part of the body
+            _data=json.loads(self.request.body)
+            _json=_data['data']
+            #_json=json.loads(self.request.get('data', None))  #.get('json', None)
+            if _json is None:
+               print(self.request)
+               self.response.write(json.dumps({'status': 'Error',
+                                               'message': 'invalid message'}))
+               return
+
+            _token=_json['token']
+            if _token is None or len(_token) < 32:
                self.response.write(json.dumps({'status': 'Error',
                                                'message': 'invalid token'}))
                return
 
-            data=self.request.get('data')
-            _command=json.loads(data)
-
-            _gds=GoogleDataStore.GoogleDataStore(_command)
+            _gds=GoogleDataStore.GoogleDataStore(_json)
             if _gds.valid_token():
                self.response.headers.add_header("Access-Control-Allow-Origin", "*")
                self.response.write(_gds.execute_command())
