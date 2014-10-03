@@ -12,7 +12,7 @@ class FileSystem(FileSystemBase.FileSystem):
           return empty list [] if unsuccessful
       """
       try:
-        return storage.keys()
+        return {'status': 'Okay', 'filelist': storage.keys()}
       except:
         pass
 

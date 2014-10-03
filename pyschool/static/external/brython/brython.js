@@ -15,18 +15,6 @@ $B.__setattr__=function(attr,value){
 if(['debug'].indexOf(attr)>-1){$B[attr]=value}
 else{throw $B.builtins.AttributeError('__BRYTHON__ object has no attribute '+attr)}}
 $B.language=window.navigator.userLanguage ||window.navigator.language
-$B.has_full_screen=document.fullscreenElement ||
-document.mozFullScreenElement ||
-document.webkitFullscreenElement ||
-document.msFullscreenElement
-$B.requestFullScreen=document.documentElement.requestFullscreen ||
-document.documentElement.msRequestFullscreen ||
-document.documentElement.mozRequestFullScreen ||
-document.documentElement.webkitRequestFullscreen
-$B.exitFullScreen=document.exitFullscreen ||
-document.msExitFullscreen ||
-document.mozCancelFullScreen ||
-document.webkitExitFullscreen
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"
 $B.date=function(){if(arguments.length===0)return $B.JSObject(new Date())
 if(arguments.length===1)return $B.JSObject(new Date(arguments[0]))

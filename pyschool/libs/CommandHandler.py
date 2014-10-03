@@ -1,3 +1,5 @@
+import json
+
 class CommandHandler:
   def __init__(self, request):
       assert isinstance(request, dict)
@@ -10,13 +12,13 @@ class CommandHandler:
          return "invalid request"
 
       if _command == 'list_files':
-         return self._list_files()
+         return self.list_files()
       elif _command == 'read_file':
-         return self._read_file()
+         return self.read_file()
       elif _command == 'write_file':
-         return self._write_file()
+         return self.write_file()
       elif _command == 'rm_file':
-         return self._rm_file()
+         return self.rm_file()
 
       return "invalid command"
 
@@ -24,19 +26,20 @@ class CommandHandler:
       _dir=self._request.get('directory', '/')
 
       #retrieve a list of files this person has access to.
-      return self._list_files(_dir)
+      return json.dumps(self._list_files(_dir))
 
   def read_file(self):
       _filename=self._request['filename']
       return self._read_file(_filename)
 
   def write_file(self):
-      _filename=self._request['filename']
-      _contents=self._request['contents']
+      _fileobj=self._request['fileobj']  #already a json string!
+      if self._write_file(_fileobj):
+         return json.dumps({'status': 'Okay', 'message': 'File saved successfully!'})
 
-      _f=FileObject.FileObject()
-      _fileobj=_f.from_json(_contents)
-      return self._write_file(_fileobj)
+      #something went wrong...
+      return json.dumps({'status': 'Error', 'message': 'File not saved..'})
+      
 
   def rm_file(self):
       _filename=self._request['filename']

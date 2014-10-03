@@ -58,7 +58,7 @@ class FileSystem:
       """
       pass
 
-  def _write_file(self, filename, contents):
+  def _write_file(self, fileobj):
       """saves a file to storage, returns True if save was successful,
          False, if unsuccessfull
       """
@@ -80,14 +80,21 @@ class FileSystem:
   def listdir(self, directory, callback):
       directory=self._prefix_check(directory)
 
+      #_filenames=self._list_files()
+      _results=self._list_files()
+      if _results['status'] == 'Error':
+         _results['filelist']=[]
+         callback(_results)
+         return
+
       _root=FileSystemNode(name='/')
       _root._isa_dir=True
 
-      _filenames=self._list_files()
-      #for _filename in storage.keys():
-      for _filename in _filenames:
+      _files=_results['filelist']
+      console.log(_files)
+      for _file in _files:
+          _filename=_file['filename']
           if _filename.startswith(directory):
-             #console.log(_filename)
              _file=_filename[len(directory):]
              _dirs=_file.split('/')
 
@@ -101,7 +108,7 @@ class FileSystem:
                     _pos.fullname=_filename
                     _pos.modified_date=self._modified_date(_filename)
       
-      callback(_root)
+      callback({'status': 'Okay', 'filelist': _root})
 
   def read_file(self, filename, callback):
       filename=self._prefix_check(filename)
@@ -115,7 +122,7 @@ class FileSystem:
 
       _filename=self._prefix_check(_filename)
       fileobj.set_filename(_filename) #the name may have changed
-      callback(self._write_file(_filename, fileobj))
+      callback(self._write_file(fileobj))
 
   def rm_file(self, filename, callback):
       filename=self._prefix_check(filename)

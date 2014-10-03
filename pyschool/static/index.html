@@ -85,21 +85,24 @@ function display_message(message){
 </script>
 
 <script type="text/python">
-from browser import document, window
+from browser import document, window, alert
 from javascript import console, JSObject
 import time
 import sys
 import traceback
+import json
 
 import editor
 
 sys.path.append('libs/FileSystem')
 import local_storage_fs as filesystem
-from FileSystemBase import FileSystemNode, FileObject
+from FileSystemBase import FileSystemNode
+import FileObject
 
 _jquery=JSObject(jQuery)
 editors=editor.Editor('editortabs')
 
+global fs
 fs=filesystem.FileSystem('/pyschool')
 
 display_message=JSObject(window.display_message)
@@ -124,17 +127,23 @@ def run():
 def create_tab(content=""):
     editors.add_editor()
 
-#info = sys.implementation.version
-#document['brython_version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 
 def toolbar_open_file_dialog():
-    def cb(filelist):
-        if filelist is None:
+    def cb(results):
+        console.log('results', results)
+        if results['status'] == 'Error':
+           #display a message dialog instead..
+           alert(results['message'])
+           return
+
+        _filelist=results['filelist']
+        if _filelist is None:
            display_message('no files available')
            return
+
         #data=json.dumps(filelist)
-        #console.log(data) 
-        _jquery('#open_file_treegrid').treegrid('loadData', [filelist])
+        console.log('filelist', _filelist) 
+        _jquery('#open_file_treegrid').treegrid('loadData', [_filelist])
         _jquery('#open_file_dialog').dialog('open')
 
     document['open_file_textbox'].value=''
@@ -143,18 +152,22 @@ def toolbar_open_file_dialog():
 
 
 def open_file():
-    def cb(fileobj):
-        if fileobj is None:  #there was an error (or file doesn't exist)
-           #show message saying file .
-           display_message('file not found')
-           console.log('file not found')
-        elif isinstance(fileobj, FileObject):
-           #open new tab with file contents
-           editors.add_editor(filename=fileobj.get_attribute('filename'), 
-                              content=fileobj.get_attribute('contents'))
-           display_message('file loaded successfully.')
-        else: #invalid fileobj, output error message
-           console.log('invalid fileobj')
+    def cb(results):
+        console.log(results)
+        if results['status'] == 'Okay':
+           fileobj=results.get('fileobj')
+           if fileobj is None:  #there was an error (or file doesn't exist)
+              #show message saying file .
+              display_message('file not found')
+              console.log('file not found')
+           elif isinstance(fileobj, FileObject.FileObject):
+              #open new tab with file contents
+              editors.add_editor(filename=fileobj.get_attribute('filename'), 
+                                 content=fileobj.get_attribute('contents'))
+              display_message('file loaded successfully.')
+              console.log('file loaded successfully.')
+           else: #invalid fileobj, output error message
+              console.log('invalid fileobj')
 
     _filename=document["open_file_textbox"].value
     fs.read_file(_filename, cb)
@@ -189,12 +202,12 @@ def open_url():
 
 
 def save_file():
-    def callback(e):
-        if e == True:  #file was saved.
-           display_message('file saved successfully')
+    def callback(_results):
+        if _results['status'] == 'Okay':
+           display_message(_results['message'])
            console.log('file saved successfully')
         else:
-           display_message('error saving file')
+           display_message(_results['message'])
            console.log('error saving file')
 
     _filename=editors.getCurrentTabName()
@@ -206,8 +219,8 @@ def save_file():
     if not _filename.startswith('/'):
        _filename='/%s' % _filename
 
-    if not _filename.startswith('/classname'):
-       _filename='/classmate%s' % _filename
+    if not _filename.startswith('/pyschool'):
+       _filename='/pyschool%s' % _filename
 
     _src=editors.getCurrentText()
     _f=FileObject.FileObject()
@@ -218,28 +231,72 @@ def save_file():
 
 def clear_outputs():
     document["pyconsole"].value = ""
-    document["pycanvas"].text = ""
+    #document["pycanvas"].text = ""
     document["pydiv"].text = ""
 
 
 def login():
     #fix me..
-    _jquery('#login_dialog').dialog('close')
-    return
     #send userid/password
     #receive token
     if window.login_type == 'authenticate':
        #send userid/password
+       _userid=document["login_userid"].value
+       _password=document["login_password"].value
+       _url="/Auth?userid=%s&password=%s" % (_userid, _password)
+
        import urllib.request
-       _url="/Auth?userid=abc&password=def"
        _fp, _url, _headers=urllib.request.urlopen(_url)
        _data=_fp.read()
-       console.log(_data)
 
-       storage_type="GoogleDataStore"
+       _json=json.loads(_data)
+       if _json['status'] == 'Okay':
+          _jquery('#login_dialog').dialog('close')
+          global fs
+          import remote_storage_fs
+          fs=remote_storage_fs.GoogleDataStorage("/pyschool")
+          fs.set_token(_json['token'])
+          return
+
+       document["login_message"].text=_json["message"]
+
     else:
-       storage_type="localStorage"
-    console.log("do login stuff!")
+       window.pyschool_storage_type="localStorage"
+
+    _jquery('#login_dialog').dialog('close')
+
+
+
+def signup():
+    #check that password and password2 are identical
+    if len(document["signup_password"].value) < 6:
+       #password must be at least 6 chars in length
+       document["signup_message"].text="Password must be at least 6 characters in length"
+       return
+
+    if document["signup_password"].value != document["signup_password2"].value:
+       document["signup_message"].text="Passwords do not match.. Try again..."
+       return
+
+    _userid=document["signup_userid"].value
+    _password=document["signup_password"].value
+    import urllib.request
+    _url="/CreateUserAccount?userid=%s&password=%s" % (_userid, _password)
+    _fp, _url, _headers=urllib.request.urlopen(_url)
+    _data=_fp.read()
+
+    try:
+       _json=json.loads(_data)
+    except:
+       document["signup_message"].text="Error contacting server"
+       return
+
+    if _json['status'] == 'Okay':
+       _jquery('#signup_dialog').dialog('close')
+       return
+
+    document["signup_message"].text=_json["message"]
+
 
 def full_screen_toggle():
     global _full_screen
@@ -265,6 +322,7 @@ window.toolbar_open_file_dialog=toolbar_open_file_dialog
 window.clear_outputs=clear_outputs
 window.login=login
 window.full_screen_toggle=full_screen_toggle
+window.signup=signup
 </script>
 
 <script type="text/javascript">
@@ -284,7 +342,7 @@ function login_type_onChange(e) {
 </head>
 
 <body id="container" class="easyui-layout"
-      onload="brython({debug:1, cache:'version', static_stdlib_import:true,
+      onload="brython({debug:1, cache:'browser', static_stdlib_import:true,
                        custom_import_funcs:[import_hooks]})">
     
     <div id="east" title=" "
@@ -410,14 +468,15 @@ function login_type_onChange(e) {
           </select>
           <table id="login_user_entry" border="0" style="display:none">
              <tr><td>Userid:</td>
-                 <td><input type="text" id="userid_textbox" value=""></td>
+                 <td><input type="text" id="login_userid" value=""></td>
              </tr>
              <tr><td>Password:</td>
-                 <td><input type="password" id="password_textbox" value=""></td>
+                 <td><input type="password" id="login_password" value=""></td>
              </tr>
+             <tr><td colspan="2"><span id="login_message"></span></td></tr>
              <tr><td colspan="2">Don't have an account? 
                  <a href="javascript:void(0)" 
-                      onclick="$('#signup_dialog').dialog('open')">Sign up</a></td>
+                      onclick="$('#signup_message').val('');$('#signup_dialog').dialog('open')">Sign up</a></td>
              </tr>
           </table>
     </div>
@@ -433,10 +492,13 @@ function login_type_onChange(e) {
         data-options="buttons:'#signup_buttons',width:400,height:200">
           <table border="0">
              <tr><td>Userid:</td>
-                 <td><input type="text" id="signup_userid_textbox" value=""></td>
+                 <td><input type="text" id="signup_userid" value=""></td>
              </tr>
              <tr><td>Password:</td>
-                 <td><input type="password" id="signup_password_textbox" value=""></td>
+                 <td><input type="password" id="signup_password" value=""></td>
+             </tr>
+             <tr><td>Verify Password:</td>
+                 <td><input type="password" id="signup_password2" value=""></td>
              </tr>
              <tr><td colspan="2"><span id="signup_message"></span></td>
              </tr>
@@ -445,11 +507,10 @@ function login_type_onChange(e) {
 
     <div id="signup_buttons">
         <a href="javascript:void(0)" class="easyui-linkbutton"
-            onclick="login()">Login</a>
+            onclick="signup()">Sign up</a>
         <a href="javascript:void(0)" class="easyui-linkbutton"
             onclick="javascript:$('#signup_dialog').dialog('close')">Close</a>
     </div>
-
 
 </body>
 </html>

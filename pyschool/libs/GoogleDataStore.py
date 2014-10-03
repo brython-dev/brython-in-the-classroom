@@ -2,6 +2,8 @@ import CommandHandler
 import FileObject
 import hashlib
 import time
+import json
+import datetime
 
 from google.appengine.ext import ndb
 # https://cloud.google.com/appengine/docs/python/ndb/
@@ -18,30 +20,29 @@ class FileRecord(ndb.Model):
       contents = ndb.TextProperty()
       modified_date = ndb.DateTimeProperty()
 
-def CreateNewAccount(userid, password):
+def CreateUserAccount(userid, password):
     _users=User.query(User.userid==userid).fetch()
-    print '%s' % _user
     if len(_users) != 0:
        #userid already taken
        return json.dumps({'status': 'Error',
                           'message': 'UserID already exists'})
-    User(userid=userid, password=password)
-    User.put()
+    _user=User(userid=userid, password=password)
+    _user.put()
     return json.dumps({'status': 'Okay', 'message': 'Account created'})
 
 def Authenticate(userid, password):
-    print "Authenticate"
     _users=User.query(User.userid==userid).fetch()
-    print '%s' % _user
 
-    assert len(_users) == 1
+    if len(_users) != 1:
+       return json.dumps({'status': 'Error', 'message': 'Invalid Userid/Password'})
+
     _user=_users[0]
     if _user.password == password:
        #create token
        _string="%s:%s:%s" % (userid, password, time.time())
        _token=hashlib.sha1(_string.encode('utf-8')).hexdigest()
        _user.token=_token
-       _user.expiration_date = time.time()
+       _user.expiration_date = datetime.datetime.fromtimestamp(time.time())
        _user.put()
        return _token
        
@@ -51,11 +52,17 @@ class GoogleDataStore(CommandHandler.CommandHandler):
   def __init__(self, request):
       CommandHandler.CommandHandler.__init__(self, request)
       self._token=request.get('token', None)
-      #self._userid='earney'
-      self._user=User.query(User.token==_token)
+      _results=User.query(User.token==self._token).fetch()
+      if len(_results) == 1:
+         self._user=_results[0]
+      else:
+         self._user=None
 
   def valid_token(self):
-      return self._user.expiration_date < time.time()
+      if self._user is None:
+         return False
+
+      return self._user.expiration_date < datetime.datetime.fromtimestamp(time.time())
 
   def _list_files(self, directory):
       _files = FileRecord.query(FileRecord.user==self._user.key).fetch()
@@ -65,29 +72,49 @@ class GoogleDataStore(CommandHandler.CommandHandler):
           _list.append({'filename': _file.filename, 
                         'modified_date': _file.modified_date})
 
-      return _list
+      return {'status': 'Okay', 'filelist': _list}
 
   def _read_file(self, filename):
       _file = FileRecord.query(FileRecord.user==self._user.key,
                                FileRecord.filename==filename).fetch()
 
-      return _file.contents
+      if len(_file) == 0:
+         return json.dumps({'status': 'Error', 'message': 'File does not exist'})
+      if len(_file) == 1: 
+         return json.dumps({'status': 'Okay', 'fileobj': _file[0].contents})
+
+      return json.dumps({'status': 'Error', 'message': 'Filesystem inconsistent'})
+      
 
   def _write_file(self, fileobj):
-      _file = FileRecord.query(FileRecord.user==self._user.key,
-                               FileRecord.filename==filename).fetch()
+      _f=FileObject.FileObject()
+      _f.from_json(fileobj)
 
-      if _file is None:
-         _file=FileRecord(user=self._user, filename=fileobj.get_filename(),
-                    contents=fileobj.get_attribute('contents'),
-                    modified_date=fileobj.get_attribute('modified_date'))
-      else:
+      _file = FileRecord.query(FileRecord.user==self._user.key,
+                               FileRecord.filename==_f.get_filename()).fetch()
+
+      if len(_file)==1:
          #what to do if the file record already exists..
+         _file[0].put()
+         return json.dumps({'status': 'Okay', 'message': 'File saved..'})
+
+      print _file
+      if len(_file) == 0:
+         #file doesn't exist in database, so lets create it a record
+         #for it.
+         _file=FileRecord(user=self._user.key, filename=_f.get_filename(),
+                    contents=fileobj,   # want to save the whole file object
+                    modified_date=_f.get_attribute('modified_date'))
          _file.put()
+         return json.dumps({'status': 'Okay', 'message': 'File saved..'})
+
+      # more then 1 file.. this shouldn't happen (should return error)
+      return json.dumps({'status': 'Error', 'message': 'Error...'})   
+
 
   def _rm_file(self, filename):
       _file = FileRecord.query(FileRecord.user==self._user.key,
                                FileRecord.filename==filename).fetch()
       _file.delete()
 
-      return True
+      return json.dumps({'status': 'Okay', 'message': 'File deleted..'})

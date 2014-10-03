@@ -10,13 +10,13 @@ threadsafe: true
 
 handlers:
 - url: /Auth
-  script: pyschool.application
+  script: pyschool_GAE.application
 
 - url: /FS
-  script: pyschool.application
+  script: pyschool_GAE.application
 
 - url: /CreateUserAccount
-  script: pyschool.application
+  script: pyschool_GAE.application
 
 - url: /(.*\.css)
   mime_type: text/css
