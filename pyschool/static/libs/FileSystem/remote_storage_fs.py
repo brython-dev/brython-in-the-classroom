@@ -22,17 +22,18 @@ class RemoteFileSystem(FileSystemBase.FileSystem):
 
       try:
         _fp,_url,_headers=urllib.request.urlopen(self._baseURL, _json)
-        return _fp.read()   #returns a string (in json format)
+        return json.loads(_fp.read())   #returns a string (in json format)
       except:
-        return json.dumps({'status': 'Error', 
-                           'message': 'Network connectivity issues'})
+        return {'status': 'Error', 
+                'message': 'Network connectivity issues'}
 
   def _list_files(self):
       """ returns a list of files this person has on storage,
           return empty list [] if unsuccessful
       """
 
-      return json.loads(self._remote_call({'command': 'list_files', 'directory': '/'}))
+      #return json.loads(self._remote_call({'command': 'list_files', 'directory': '/'}))
+      return self._remote_call({'command': 'list_files', 'directory': '/'})
 
   def _read_file(self, filename):
       """ retrieves file from storage, returns fileobj if successful,
@@ -43,7 +44,7 @@ class RemoteFileSystem(FileSystemBase.FileSystem):
 
       try:
         _f=FileObject.FileObject()
-        _f.from_json(_json)
+        _f.from_json(_json['fileobj'])
         return {'status': 'Okay', 'fileobj': _f}
       except Exception as e:
         return {'status': 'Error', 'message': str(e)}
@@ -54,8 +55,8 @@ class RemoteFileSystem(FileSystemBase.FileSystem):
       """
    
       _fileobj=fileobj.to_json()
-      _json=self._remote_call({'command': 'write_file', 'fileobj': _fileobj})
-      return json.loads(_json)
+      _res=self._remote_call({'command': 'write_file', 'fileobj': _fileobj})
+      return _res
       
 
   def _rm_file(self, filename):
@@ -63,8 +64,8 @@ class RemoteFileSystem(FileSystemBase.FileSystem):
          False, if unsuccessfull
       """
 
-      _json=self._remote_call({'command': 'rm_file', 'filename': filename})
-      return json.loads(_json)
+      _res=self._remote_call({'command': 'rm_file', 'filename': filename})
+      return _res
 
 
 class GoogleDataStorage(RemoteFileSystem):
