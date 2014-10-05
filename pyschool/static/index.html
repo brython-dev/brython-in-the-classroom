@@ -256,15 +256,17 @@ def login():
           import remote_storage_fs
           fs=remote_storage_fs.GoogleDataStorage("/pyschool")
           fs.set_token(_json['token'])
+
+          #is there a better way? (like setTitle)?
+          _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Data Storage')
+          _jquery('#login_dialog').dialog('close')
           return
 
        document["login_message"].text=_json["message"]
 
     else:
-       window.pyschool_storage_type="localStorage"
-
-    _jquery('#login_dialog').dialog('close')
-
+       _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
+       _jquery('#login_dialog').dialog('close')
 
 
 def signup():
@@ -349,12 +351,12 @@ function login_type_onChange(e) {
          data-options="region:'east',split:true">
         <div class="easyui-tabs" id="east-tabs"
              data-options="tools:'#tab-tools-output',fit:true">  
-            <div id="console_tab" title="pyconsole" data-options="fit:true">
+            <div id="console_tab" title="sys.stdout" data-options="fit:true">
                 <textarea id="pyconsole" style="background:white;width:98%;height:98%" readonly></textarea>
             </div>
             <div id="pydiv" title="pydiv" data-options="fit:true"></div>
-            <div id="sandbox_tab" title="sandbox" data-options="fit:true">
-                <iframe id="sandbox_iframe" src="sandbox.html"
+            <div id="shell" title="shell" data-options="fit:true">
+                <iframe id="shell_iframe" src="shell.html"
                         style="frameborder:0"></iframe>
             </div>
         </div>
