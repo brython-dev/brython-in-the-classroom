@@ -1,6 +1,8 @@
 from browser.local_storage import storage
 import FileSystemBase
+import FileObject
 
+import json
 from javascript import console
 
 class FileSystem(FileSystemBase.FileSystem):
@@ -11,12 +13,22 @@ class FileSystem(FileSystemBase.FileSystem):
       """ returns a list of files this person has on storage,
           return empty list [] if unsuccessful
       """
-      try:
-        return {'status': 'Okay', 'filelist': storage.keys()}
-      except:
-        pass
 
-      return []
+      _list=[]
+      for _file in storage.keys():
+          try:
+            _fileobj=FileObject.FileObject()
+            _fileobj.from_json(storage[_file])
+          except Exception as e:
+            #not a FileObject file..
+            console.log(str(e))
+            console.log('not a fileobject...', _file)
+            continue
+
+          _list.append({'filename': _fileobj.get_filename(), 
+                        'modified_date': _fileobj.get_attribute('modified_date')})
+
+      return {'status': 'Okay', 'filelist': _list}
 
   def _read_file(self, filename):
       """ retrieves file from storage, returns fileobj if successful,
@@ -25,11 +37,11 @@ class FileSystem(FileSystemBase.FileSystem):
       try:
         _json=storage[filename]
       except KeyError:
-        return None
+        return {'status': 'Error', 'message': 'File doesn''t exist'}
 
-      _f=FileSystemBase.FileObject()
+      _f=FileObject.FileObject()
       _f.from_json(_json)
-      return _f
+      return {'status': 'Okay', 'fileobj': _f}
 
   def _write_file(self, fileobj):
       """saves a file to storage, returns True if save was successful,
@@ -38,10 +50,10 @@ class FileSystem(FileSystemBase.FileSystem):
    
       try:
          storage[fileobj.get_attribute('filename')] = fileobj.to_json()
-      except:
-         return False
+      except Exception as e:
+         return {'status': 'Error', 'message': str(e)}
 
-      return True      
+      return {'status': 'Okay', 'message': 'File Saved...'}
       
 
   def _rm_file(self, filename):
@@ -50,7 +62,7 @@ class FileSystem(FileSystemBase.FileSystem):
       """
       try:
          del storage[filename]
-      except KeyError:
-         return None
+      except Exception as e:
+         return {'status': 'Error', 'message': str(e)}
 
-      return True
+      return {'status': 'Okay', 'message': 'File Removed...'}
