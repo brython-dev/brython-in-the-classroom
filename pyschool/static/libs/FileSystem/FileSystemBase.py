@@ -2,6 +2,8 @@ import json
 from javascript import console
 import FileObject
 
+import datetime
+
 unique_id=0
 
 class FileSystemNode:
@@ -30,7 +32,7 @@ class FileSystemNode:
       #if we get here, there is no child by that name
       _child=FileSystemNode(name)
       self.children.append(_child)
-      return _child 
+      return _child
 
 class FileSystem:
   def __init__(self, root='/'):
@@ -75,7 +77,7 @@ class FileSystem:
           for some implementations, this could be an expensive operation
           if so, just return a date such as '1900-01-01'
       """
-      return '1900-01-01'
+      return 1
 
   def listdir(self, directory, callback):
       directory=self._prefix_check(directory)
@@ -93,10 +95,10 @@ class FileSystem:
       _files=_results['filelist']
       console.log(_files)
       for _file in _files:
-          _filename=_file['filename']
-          if _filename.startswith(directory):
-             _file=_filename[len(directory):]
-             _dirs=_file.split('/')
+          _fullname=_file['filename']
+          if _fullname.startswith(directory):
+             _filename=_fullname[len(directory):]
+             _dirs=_filename.split('/')
 
              _pos=_root
              for _dir in _dirs:
@@ -105,8 +107,15 @@ class FileSystem:
                  _pos._isa_file=not _pos._isa_dir
 
                  if _pos._isa_file:
-                    _pos.fullname=_filename
-                    _pos.modified_date=self._modified_date(_filename)
+                    _pos.fullname=_fullname
+                    _tstamp=_file.get('modified_date',
+                                      self._modified_date(_fullname))
+                    if not isinstance(_tstamp, (int,)):
+                       _tstamp=1
+                    console.log(_tstamp)
+                    _md=datetime.datetime.fromtimestamp(_tstamp)
+                    console.log(str(_md))
+                    _pos.modified_date=str(_md)
       
       callback({'status': 'Okay', 'filelist': _root})
 
@@ -122,6 +131,9 @@ class FileSystem:
 
       _filename=self._prefix_check(_filename)
       fileobj.set_filename(_filename) #the name may have changed
+      #fix me  brython issue  _time.mktime
+      #fileobj.set_attribute('modified_date', int(datetime.datetime.now().timestamp()))
+      fileobj.set_attribute('modified_date', 1412391232)
       callback(self._write_file(fileobj))
 
   def rm_file(self, filename, callback):

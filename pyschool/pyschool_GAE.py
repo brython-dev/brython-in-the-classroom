@@ -32,13 +32,12 @@ class Auth(webapp2.RequestHandler):
             _password=self.request.get('password', None)
             if _userid is None or _password is None:
                self.response.write(json.dumps({'status': 'Error',
-                                            'message': 'invalid userid/password'}))
+                                               'message': 'invalid userid/password'}))
                return
 
-            _token=GoogleDataStore.Authenticate(userid=_userid,
-                                                password=_password) 
-            self.response.write(json.dumps({'status': 'Okay', 
-                                            'token': _token}))
+            _res=GoogleDataStore.Authenticate(userid=_userid,
+                                              password=_password) 
+            self.response.write(json.dumps(_res))
 
 class CreateUserAccount(webapp2.RequestHandler):
         def get(self):
@@ -50,9 +49,9 @@ class CreateUserAccount(webapp2.RequestHandler):
                                             'message': 'invalid userid/password'}))
                return
 
-            _response=GoogleDataStore.CreateUserAccount(userid=_userid,
-                                                        password=_password) 
-            self.response.write(_response)
+            _res=GoogleDataStore.CreateUserAccount(userid=_userid,
+                                                   password=_password) 
+            self.response.write(json.dumps(_res))
 
 class FileStorage(webapp2.RequestHandler):
         def post(self):
