@@ -28,13 +28,13 @@ def CreateUserAccount(userid, password):
                           'message': 'UserID already exists'})
     _user=User(userid=userid, password=password)
     _user.put()
-    return json.dumps({'status': 'Okay', 'message': 'Account created'})
+    return {'status': 'Okay', 'message': 'Account created'}
 
 def Authenticate(userid, password):
     _users=User.query(User.userid==userid).fetch()
 
     if len(_users) != 1:
-       return json.dumps({'status': 'Error', 'message': 'Invalid Userid/Password'})
+       return {'status': 'Error', 'message': 'Invalid Userid/Password'}
 
     _user=_users[0]
     if _user.password == password:
@@ -44,9 +44,9 @@ def Authenticate(userid, password):
        _user.token=_token
        _user.expiration_date = datetime.datetime.fromtimestamp(time.time())
        _user.put()
-       return _token
+       return {'status': 'Okay', 'token': _token}
        
-    return None
+    return {'status' :'Error', 'message': 'Invalid Userid/Password'}
 
 class GoogleDataStore(CommandHandler.CommandHandler):
   def __init__(self, request):
@@ -70,7 +70,7 @@ class GoogleDataStore(CommandHandler.CommandHandler):
       _list=[]
       for _file in _files:
           _list.append({'filename': _file.filename, 
-                        'modified_date': _file.modified_date})
+                        'modified_date': _file.modified_date.timestamp()})
 
       return {'status': 'Okay', 'filelist': _list}
 
@@ -93,8 +93,15 @@ class GoogleDataStore(CommandHandler.CommandHandler):
       _file = FileRecord.query(FileRecord.user==self._user.key,
                                FileRecord.filename==_f.get_filename()).fetch()
 
+      _md=_f.get_attribute('modified_date')
+      if _md is None:
+         _md='1900-01-01 00:00:00'
+
+      _modified_date=datetime.datetime.strptime(_md)
+
       if len(_file)==1:
          #what to do if the file record already exists..
+         _file.contents=_f.to_json()
          _file[0].put()
          return json.dumps({'status': 'Okay', 'message': 'File saved..'})
 
