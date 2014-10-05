@@ -58,11 +58,17 @@ class FileStorage(webapp2.RequestHandler):
             
             #there is probably something wrong with brythons' ajax
             #function that causes the post data to be part of the body
-            _data=json.loads(self.request.body)
+            try:
+               _data=json.loads(self.request.body)
+            except Exception as e:
+               self.response.write(json.dumps({'status': 'Error',
+                                               'message': str(e)}))
+               return
+
             _json=_data['data']
             #_json=json.loads(self.request.get('data', None))  #.get('json', None)
             if _json is None:
-               print(self.request)
+               #print(self.request)
                self.response.write(json.dumps({'status': 'Error',
                                                'message': 'invalid message'}))
                return
@@ -75,7 +81,6 @@ class FileStorage(webapp2.RequestHandler):
 
             _gds=GoogleDataStore.GoogleDataStore(_json)
             if _gds.valid_token():
-               self.response.headers.add_header("Access-Control-Allow-Origin", "*")
                self.response.write(_gds.execute_command())
                return
 

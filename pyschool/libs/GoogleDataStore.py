@@ -18,7 +18,7 @@ class FileRecord(ndb.Model):
       user = ndb.KeyProperty(kind=User)
       filename = ndb.StringProperty()
       contents = ndb.TextProperty()
-      modified_date = ndb.DateTimeProperty()
+      modified_date = ndb.IntegerProperty()
 
 def CreateUserAccount(userid, password):
     _users=User.query(User.userid==userid).fetch()
@@ -70,7 +70,7 @@ class GoogleDataStore(CommandHandler.CommandHandler):
       _list=[]
       for _file in _files:
           _list.append({'filename': _file.filename, 
-                        'modified_date': _file.modified_date.timestamp()})
+                        'modified_date': _file.modified_date})
 
       return {'status': 'Okay', 'filelist': _list}
 
@@ -95,13 +95,12 @@ class GoogleDataStore(CommandHandler.CommandHandler):
 
       _md=_f.get_attribute('modified_date')
       if _md is None:
-         _md='1900-01-01 00:00:00'
-
-      _modified_date=datetime.datetime.strptime(_md)
+         _f.set_attribute('modified_date', 1)
 
       if len(_file)==1:
          #what to do if the file record already exists..
          _file.contents=_f.to_json()
+         _file.modified_date=_f.get_attribute('modified_date')
          _file[0].put()
          return json.dumps({'status': 'Okay', 'message': 'File saved..'})
 
