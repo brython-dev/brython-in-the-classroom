@@ -7305,9 +7305,9 @@ if($B.use_VFS){funcs=[import_from_VFS]
 }else if($B.static_stdlib_import){funcs=[import_from_stdlib_static]
 }else{funcs=[import_from_stdlib]
 }
-funcs=funcs.concat([import_from_site_packages,import_from_caller_folder])
 if($B.$options['custom_import_funcs']!==undefined){funcs=funcs.concat($B.$options['custom_import_funcs'])
 }
+funcs=funcs.concat([import_from_site_packages,import_from_caller_folder])
 var mod_elts=mod_name.split('.')
 for(var i=0;i<mod_elts.length;i++){
 var elt_name=mod_elts.slice(0,i+1).join('.')

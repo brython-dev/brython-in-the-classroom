@@ -24,6 +24,8 @@
   <script type="text/javascript" src="external/brython/brython.js"></script>
   <script type="text/javascript" src="external/brython/py_VFS.js"></script>
 
+  <script type="text/javascript" src="libs/custom_VFS.js"></script>
+
 <style type="text/css">
 #east {width:50%}
 iframe {padding: 0px; width:98%;height:98%;}
@@ -36,6 +38,7 @@ iframe {padding: 0px; width:98%;height:98%;}
 </style>
 
 <script type="text/python" src="libs/importhooks/localstorage.py"></script>
+<script type="text/python" src="libs/importhooks/custom_VFS.py"></script>
 
 <script type="text/javascript">
 $(function(){
@@ -231,7 +234,6 @@ def save_file():
 
 def clear_outputs():
     document["pyconsole"].value = ""
-    #document["pycanvas"].text = ""
     document["pydiv"].text = ""
 
 
@@ -400,10 +402,18 @@ function login_type_onChange(e) {
             </div>
         </div>
         <div>
-            <span>Properties</span>
+            <span>Options</span>
             <div style="width:150px;">
                 <div data-options="iconCls:'icon-full-screen-toggle'"
                      onclick="full_screen_toggle()">Toggle Full Screen</div>
+            </div>
+        </div>
+
+        <div>
+            <span>Help</span>
+            <div style="width:150px;">
+                <div onclick="window.open('http://brython.info/doc/en/index.html')">Brython Documentation</div>
+                <div onclick="window.open('https://docs.python.org/3/')">Python Documentation</div>
             </div>
         </div>
         <div class="menu-sep"></div>
