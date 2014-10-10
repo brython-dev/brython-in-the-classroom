@@ -107,7 +107,7 @@ editors=editor.Editor('editortabs')
 
 global fs
 fs=filesystem.FileSystem('/pyschool')
-
+window._FS=fs
 display_message=JSObject(window.display_message)
 
 document["pyconsole"].value=''  #clear console on load
@@ -334,7 +334,7 @@ window.signup=signup
 // so we must define the function in javascript instead
 function login_type_onChange(e) {
     _selection=$('#login_type').combobox('getValue')
-    window.login_type=__BRYTHON__.builtins.str(_selection)
+    //window.login_type=__BRYTHON__.builtins.str(_selection)
     if (_selection == 'authenticate') {
        $('#login_user_entry').show() // style.display='block'
     } else {
@@ -356,7 +356,7 @@ function login_type_onChange(e) {
             <div id="console_tab" title="sys.stdout" data-options="fit:true">
                 <textarea id="pyconsole" style="background:white;width:98%;height:98%" readonly></textarea>
             </div>
-            <div id="pydiv" title="pydiv" data-options="fit:true"></div>
+            <div id="pydiv" title='&amp;ltdiv id="pydiv"&gt;' data-options="fit:true"></div>
             <div id="shell" title="shell" data-options="fit:true">
                 <iframe id="shell_iframe" src="shell.html"
                         style="frameborder:0"></iframe>
