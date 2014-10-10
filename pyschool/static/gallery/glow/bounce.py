@@ -1,7 +1,7 @@
 from glow import *
 
-glow('glowscript') # initialization; should not be needed here
-scene = canvas()   # also should not be needed here
+glow('pydiv')
+scene = canvas()
 
 side = 4.0
 thk = 0.3
