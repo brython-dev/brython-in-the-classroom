@@ -1,12 +1,6 @@
-<html>
-
-<head>
-<script type="text/javascript" src="brython_dist.js"></script>
-
-<script type="text/python">
 from glow import *
 
-_gs=glow('glowscript')
+_gs=glow('pydiv')
 _scene=canvas()
 
 _box=box(color=color.red, pos=vec(1,2,3))
@@ -30,10 +24,3 @@ def spin():
     rate(100, spin)  # make spin a callback       
 
 spin()
-</script>
-</head>
-
-<body onload="brython({debug:1})">
-<div id="glowscript" class="glowscript"></div>
-</body>
-</html>
