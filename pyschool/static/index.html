@@ -112,6 +112,22 @@ display_message=JSObject(window.display_message)
 
 document["pyconsole"].value=''  #clear console on load
 
+def parse_query_string():
+    _dict={}
+    _s=window.location.search[1:]
+    console.log(_s)
+    if len(_s) < 3:
+       return {}
+
+    _items=_s.split('&')
+    console.log(_items)
+    for _item in _items:
+        _variable, _value=_item.split('=')
+        _dict[_variable]=_value.replace('%2F', '/')  #fix me  url decode?
+
+    return _dict
+
+
 def run():
     #find selected Tab (and get its contents)
     src=editors.getCurrentText()
@@ -315,6 +331,13 @@ def full_screen_toggle():
     _full_screen=not _full_screen
 
 _full_screen=False
+
+_url_variables=parse_query_string()
+
+if 'script' in _url_variables:
+   console.log(_url_variables)
+   document['open_url_textbox'].value=_url_variables['script']
+   open_url()
 
 window.run=run
 window.create_tab=create_tab
