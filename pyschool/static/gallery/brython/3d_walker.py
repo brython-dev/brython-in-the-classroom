@@ -378,10 +378,21 @@ def init():
     #  return    
     #map=ele.getContext("2d")
 
-    doc['pydiv'] <= html.CANVAS(id="underMap", width="80px", height="80px")
-    doc['pydiv'] <= html.CANVAS(id="map", width="80px", height="80px")
+    _css=doc.createElement('link')
+    _css.type="text/css"
+    _css.rel="stylesheet"
+    _css.href="gallery/brython/css/3Dwalker.css"
 
-    doc['pydiv'] <= html.DIV(id='holder')
+    doc['pydiv'] <= _css 
+
+    _app = html.DIV(id="app")
+    _app <= html.CANVAS(id="underMap", width="80px", height="80px")
+    _app <= html.CANVAS(id="map", width="80px", height="80px")
+
+    doc['pydiv'] <= html.DIV(id="content")
+    doc['content'] <= _app
+
+    _app <= html.DIV(id='holder')
 
     doc['holder']<=html.DIV(id='sky')
     doc['holder']<=html.DIV(id='floor')
@@ -389,10 +400,10 @@ def init():
     doc['holder']<=html.DIV(id='overlay')
     canvas=doc["canvas"].getContext("2d")
     overlay=doc["overlay"]
-    map=doc["map"]
+    map=doc["map"].getContext('2d')
     doc["sky"].style.backgroundPosition="%spx 0" %floor(-playerDir/(2*pi)*2400)
     drawCanvas()
-    #initUnderMap()
+    initUnderMap()
     timer.set_interval(update, 35)
 
 init()
