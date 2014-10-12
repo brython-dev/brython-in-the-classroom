@@ -7,10 +7,6 @@ map = None
 canvas = None
 overlay = None
 mpos = None # mouse position
-#pi=math.pi
-#floor=math.floor
-#sin=math.sin
-#cos=math.cos
 total=0
 samples=25
 
