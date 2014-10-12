@@ -373,7 +373,43 @@ function login_type_onChange(e) {
     
     <div id="center" data-options="region:'center'">
         <div class="easyui-tabs" id="editortabs" data-options="tools:'#tab-tools',fit:true">
-            <div id="west" title="Welcome"><pre id="mytest" class="editclass">Welcome to PySchool.net!</pre></div>
+            <div id="west" title="Welcome" data-options="closable:true">
+               <div id="welcome" class="editclass">
+                   <h2>Welcome to PySchool.net!</h2>
+                   <p>
+                   Click <img style="width:16px;height:16px" 
+                              src="css/icons/document-new.svg"> 
+                   to open a new tab and start coding!
+                   <hr>
+                   <h3>Additional Help/Resources</h3>
+                   Hover your mouse over any of the toolbar icons to get a basic description.
+                   <p>
+                   Click the <img style="width:16px;height:16px"
+                              src="css/icons/menu.svg"> icon for additional menu items.
+                   <p>
+                   There are 3 tabs on the right side of the screen.
+                   <li>
+                     <ul><b>sys.stdout:</b> this panel displays output
+                         <br>
+                         <pre>
+     print("Hello World!")
+                         </pre>
+                     </ul>
+                     <ul><b>&lt;div id="pydiv"&gt;:</b> allows you to write html code
+                         to the pydiv div tag.
+                         <br>
+                         <pre>
+     document["pydiv"] <= html.P("Hello World!")
+                         </pre>
+                     </ul>
+                     <ul><b>shell:</b> provides access to a brython/python console shell.  You can type commands, and see the results immediately.
+                         <br>
+                         <pre>
+     import sys
+     dir(sys)
+                         </pre>
+               </div>
+            </div>
         </div>
     </div>
 
@@ -388,7 +424,7 @@ function login_type_onChange(e) {
         <a href="javascript:void(0)" title="run code" class="easyui-linkbutton" 
             data-options="plain:true,iconCls:'icon-compile'" onclick="run()"></a>
         <a href="javascript:void(0)" title="menu" class="easyui-linkbutton" 
-            data-options="plain:true,iconCls:'icon-menu'" 
+            data-options="plain:true,iconCls:'icon-menu'"
             onclick="$('#menu').menu('show',{left:event.pageX,top:event.pageY})"></a>
     </div>
 
@@ -410,10 +446,11 @@ function login_type_onChange(e) {
         </div>
 
         <div>
-            <span>Help</span>
+            <span>Help/Docs</span>
             <div style="width:150px;">
                 <div onclick="window.open('http://brython.info/doc/en/index.html')">Brython Documentation</div>
                 <div onclick="window.open('https://docs.python.org/3/')">Python Documentation</div>
+                <div onclick="window.open('help/index.html')">PySchool Documentation</div>
             </div>
         </div>
         <div class="menu-sep"></div>
