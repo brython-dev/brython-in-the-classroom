@@ -10,7 +10,7 @@ To start pyschool locally just run:
 The --port option is only necessary if you want to run the local server
 on a port different than 8000.
 
-It can bu used with python >= 2.7
+It can be used with python >= 2.7
 """
 
 # imports
@@ -33,6 +33,8 @@ else:
 
 def run_local():
     """This function runs a basic builtin server locally for development."""
+
+    os.chdir('./static')   #change root directory to static
     try:
         os.nice(19)
     except Exception as error:
