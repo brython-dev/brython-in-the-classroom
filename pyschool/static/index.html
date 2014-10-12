@@ -51,7 +51,7 @@ $(function(){
        $('#open_url_dialog').dialog('close');
 
        //eventually remove this line once database, etc are finished..
-       //$('#login_dialog').dialog('close');
+       $('#login_dialog').dialog('close');
        $('#signup_dialog').dialog('close');
 });
 </script>
@@ -120,7 +120,7 @@ def parse_query_string():
        return {}
 
     _items=_s.split('&')
-    console.log(_items)
+    #console.log(_items)
     for _item in _items:
         _variable, _value=_item.split('=')
         _dict[_variable]=_value.replace('%2F', '/')  #fix me  url decode?
@@ -253,10 +253,23 @@ def clear_outputs():
     document["pydiv"].text = ""
 
 
+def parse_cookie():
+    _dict={}
+    if document.cookie == '':
+       return {}
+
+    _items=document.cookie.split(';')
+    for _item in _items:
+        _variable, _value=_item.split('=')
+        _dict[_variable]=_value
+    return _dict
+
+
 def login():
     #fix me..
     #send userid/password
     #receive token
+
     if window.login_type == 'authenticate':
        #send userid/password
        _userid=document["login_userid"].value
@@ -274,6 +287,7 @@ def login():
           import remote_storage_fs
           fs=remote_storage_fs.GoogleDataStorage("/pyschool")
           fs.set_token(_json['token'])
+          document.cookie='token=%s;login_type=authenticate' % _json['token']
 
           #is there a better way? (like setTitle)?
           _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Cloud')
@@ -283,6 +297,7 @@ def login():
        document["login_message"].text=_json["message"]
 
     else:
+       document.cookie='login_type=local'
        _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
        _jquery('#login_dialog').dialog('close')
 
@@ -338,6 +353,10 @@ if 'script' in _url_variables:
    console.log(_url_variables)
    document['open_url_textbox'].value=_url_variables['script']
    open_url()
+
+_cookie=parse_cookie()
+if not 'login_type' in _cookie:
+   _jquery('#login_dialog').dialog('open')
 
 window.run=run
 window.create_tab=create_tab
