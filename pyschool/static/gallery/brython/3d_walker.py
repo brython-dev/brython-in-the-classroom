@@ -403,3 +403,5 @@ def init():
     timer.set_interval(update, 35)
 
 init()
+
+print("click on the &lt;div id='pydiv'&gt; tab to see the output")

@@ -99,3 +99,5 @@ def show_hours():
 
 show_hours()
 set_clock()
+
+print("click on the &lt;div id='pydiv'&gt; tab to see the output")

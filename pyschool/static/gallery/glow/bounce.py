@@ -32,3 +32,5 @@ def move():
   rate(200,move) # execute the move function about 200 times per second
 	
 move() # Execute move to start the repetition
+
+print("click on the &lt;div id='pydiv'&gt; tab to see the output")
