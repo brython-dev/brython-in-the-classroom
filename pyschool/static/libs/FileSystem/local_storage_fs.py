@@ -16,6 +16,7 @@ class FileSystem(FileSystemBase.FileSystem):
 
       _list=[]
       for _file in storage.keys():
+          if not _file.startswith('/pyschool'): continue
           try:
             _fileobj=FileObject.FileObject()
             _fileobj.from_json(storage[_file])
