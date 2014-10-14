@@ -130,10 +130,8 @@ def run():
 def create_tab(content=""):
     editors.add_editor()
 
-
 def toolbar_open_file_dialog():
     def cb(results):
-        console.log('results', results)
         if results['status'] == 'Error':
            #display a message dialog instead..
            alert(results['message'])
@@ -144,8 +142,6 @@ def toolbar_open_file_dialog():
            display_message('no files available')
            return
 
-        #data=json.dumps(filelist)
-        console.log('filelist', _filelist) 
         _jquery('#open_file_treegrid').treegrid('loadData', [_filelist])
         _jquery('#open_file_dialog').dialog('open')
 
@@ -153,10 +149,8 @@ def toolbar_open_file_dialog():
     # go retrieve a list of files a person could open
     fs.listdir('/', cb)
 
-
 def open_file():
     def cb(results):
-        console.log(results)
         if results['status'] == 'Okay':
            fileobj=results.get('fileobj')
            if fileobj is None:  #there was an error (or file doesn't exist)
@@ -289,11 +283,11 @@ def signup():
     #check that password and password2 are identical
     if len(document["signup_password"].value) < 6:
        #password must be at least 6 chars in length
-       document["signup_message"].text="Password must be at least 6 characters in length"
+       document["signup_message"].html="Password must be at least 6 characters in length"
        return
 
     if document["signup_password"].value != document["signup_password2"].value:
-       document["signup_message"].text="Passwords do not match.. Try again..."
+       document["signup_message"].html="Passwords do not match.. Try again..."
        return
 
     _userid=document["signup_userid"].value
@@ -309,11 +303,12 @@ def signup():
        document["signup_message"].text="Error contacting server"
        return
 
+    console.log(_json)
     if _json['status'] == 'Okay':
        _jquery('#signup_dialog').dialog('close')
        return
 
-    document["signup_message"].text=_json["message"]
+    document["signup_message"].html=_json["message"]
 
 
 def full_screen_toggle():
