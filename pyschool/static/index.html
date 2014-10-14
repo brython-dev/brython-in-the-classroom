@@ -253,16 +253,16 @@ def clear_outputs():
     document["pydiv"].text = ""
 
 
-#def parse_cookie():
-#    _dict={}
-#    if document.cookie == '':
-#       return {}
+def parse_cookie():
+    _dict={}
+    if document.cookie == '':
+       return {}
 
-#    _items=document.cookie.split(';')
-#    for _item in _items:
-#        _variable, _value=_item.split('=')
-#        _dict[_variable]=_value
-#    return _dict
+    _items=document.cookie.split(';')
+    for _item in _items:
+        _variable, _value=_item.split('=')
+        _dict[_variable]=_value
+    return _dict
 
 
 def login():
@@ -354,17 +354,17 @@ if 'script' in document.query:
    open_url()
 
 print(document.cookie)
-#_cookie=parse_cookie()
-if not 'login_type' in document.cookie:
+_cookie=parse_cookie()
+if not 'login_type' in _cookie:
    _jquery('#login_dialog').dialog('open')
-elif document.cookie['login_type'] == 'authenticate' and 'token' in _cookie:
+elif _cookie['login_type'] == 'authenticate' and 'token' in _cookie:
    _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Cloud')
    global fs
    import remote_storage_fs
    fs=remote_storage_fs.GoogleDataStorage("/pyschool")
    console.log(_cookie['token'])
    fs.set_token(_cookie['token'])
-elif document.cookie['login_type'] == 'guest':
+elif _cookie['login_type'] == 'guest':
    _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
 else:
    _jquery('#login_dialog').dialog('open')
