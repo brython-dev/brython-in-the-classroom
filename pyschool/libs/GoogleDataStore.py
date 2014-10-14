@@ -90,21 +90,21 @@ class GoogleDataStore(CommandHandler.CommandHandler):
       _f=FileObject.FileObject()
       _f.from_json(fileobj)
 
-      _file = FileRecord.query(FileRecord.user==self._user.key,
+      _files = FileRecord.query(FileRecord.user==self._user.key,
                                FileRecord.filename==_f.get_filename()).fetch()
 
       _md=_f.get_attribute('modified_date')
       if _md is None:
          _f.set_attribute('modified_date', 1)
 
-      if len(_file)==1:
+      if len(_files)==1:
+         _file=_files[0]
          #what to do if the file record already exists..
          _file.contents=_f.to_json()
          _file.modified_date=_f.get_attribute('modified_date')
-         _file[0].put()
+         _file.put()
          return json.dumps({'status': 'Okay', 'message': 'File saved..'})
 
-      print _file
       if len(_file) == 0:
          #file doesn't exist in database, so lets create it a record
          #for it.
