@@ -15,6 +15,15 @@ handlers:
 - url: /FS
   script: pyschool_GAE.application
 
+- url: /SharePermissions
+  script: pyschool_GAE.application
+
+- url: /Shares/[a-h0-9]+
+  script: pyschool_GAE.application
+
+- url: /Shares/[a-h0-9]+/.*
+  script: pyschool_GAE.application
+
 - url: /CreateUserAccount
   script: pyschool_GAE.application
 

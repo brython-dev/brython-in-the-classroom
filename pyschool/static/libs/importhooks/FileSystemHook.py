@@ -34,4 +34,5 @@ class FileSystemHook:
 # we probably want to add this to sys.meta_path, so lets just do it for the
 # user
 
-sys.meta_path.append(LocalStorageHook)
+#sys.meta_path.append(LocalStorageHook)
+sys.meta_path.append(FileSystemHook)
