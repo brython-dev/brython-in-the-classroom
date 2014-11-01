@@ -26,13 +26,13 @@ class ShareRecord(ndb.Model):
       dir=ndb.StringProperty()
       active=ndb.BooleanProperty()
 
-      self._is_saved = False
+      is_saved = False
 
-  def _post_put_hook(self, f):
-      if f.state == f.FINISHING:
-         self.is_saved = True
-      else:
-         self.is_saved = False
+      def _post_put_hook(self, f):
+          if f.state == f.FINISHING:
+             self.is_saved = True
+          else:
+             self.is_saved = False
 
 def CreateUserAccount(userid, password):
     _users=User.query(User.userid==userid).fetch()
@@ -61,13 +61,7 @@ def GetSharedFile(shareid, additional_path=''):
           _filename+='/' + additional_path
        print _filename
        _fr=FileRecord.query(FileRecord.filename==_filename).fetch()
-       #_filename=_fr[0].filename
 
-       #if len(additional_path) > 0 and not additional_path.startswith('/') and not _filename.startswith('/'):
-       #   additional_path='/%s' % additional_path
-
-       #_filename=_filename + additional_path
-       #_fr=FileRecord.query(FileRecord.filename==_filename).fetch()
        if len(_fr) == 1:
           return {'status': 'Okay', 'fileobj': _fr[0].contents}
        elif len(_fr)==0:
@@ -281,7 +275,8 @@ class ShareHandler:
               if _dir not in _dirs:
                  print _dir
                  _dirs.append(_dir)
-                 _sr=ShareRecord.query(ShareRecord.dir == _dir).fetch()
+                 _sr=ShareRecord.query(ShareRecord.dir == _dir,
+                                       ShareRecord.user == self._user.key).fetch()
                  if len(_sr) == 1:
                     _pos._shareid=_sr[0].shareid
                     _pos._active=_sr[0].active
@@ -289,6 +284,8 @@ class ShareHandler:
                     #_pos._fullname=_dir
                     _pos._isa_dir=_part != _parts[-1]
                     _pos._isa_file=not _pos._isa_dir
+                 else:
+                    print "list files ShareRecord", len(_sr)
 
       return json.dumps({'status': 'Okay', 'files': _root.get_dict()})
 
@@ -302,37 +299,32 @@ class ShareHandler:
       print _directories
       _count=0
       for _dir, _active in _directories.items():
-          if _dir.startswith('/'):
-             _dir=_dir[1:]
-          #if not _dir.startswith('/'):
-          #   _dir='/%s' % _dir
+          if not _dir.startswith('/'):
+             _dir='/%s' % _dir
 
-          #if not _dir.startswith('/pyschool'):
-          #   _dir='/pyschool%s' % _dir
-          #_fr=FileRecord.query(FileRecord.filename==_filename).fetch()
-          #if len(_fr) == 0:
-          #   print "file %s does not exit in database" % _filename
-          #elif len(_fr) == 1:
-             #check to see if a share record already exists for this filerecord
-          _sr=ShareRecord.query(ShareRecord.dir==_dir).fetch()
+          print _dir
+          _sr=ShareRecord.query(ShareRecord.dir==_dir, 
+                                ShareRecord.user==self._user.key).fetch()
 
           if len(_sr) == 0:
              #this share does not exist.. so lets create it.
              _sr=ShareRecord()
              _sr.dir=_dir
+             _sr.user=self._user.key
              _sr.shareid=hashlib.md5("%s:%s:%s" % (self._user, _dir, time.time())).hexdigest()
-             _sr._active=_active=='Y'
+             _sr.active= _active in ('Y', u'Y')
              _sr.put()
              _count+=1
              print 'shareid0 %s "%s"' % ( _sr.shareid, _active)
              print _sr.is_saved
           elif len(_sr) == 1:
-             _sr[0]._active=_active=='Y'
+             _sr[0].user=self._user.key
+             _sr[0].active= _active in ('Y', u'Y')
              if _sr[0].shareid in (None, '', ' '):
                 _sr[0].shareid=hashlib.md5("%s:%s:%s" % (self._user, _dir, time.time())).hexdigest()
              _sr[0].put()
              _count+=1
-             print 'shareid1 %s "%s"' % ( _sr[0].shareid, _sr[0]._active)
+             print 'shareid1 %s "%s"' % ( _sr[0].shareid, _sr[0].active)
 
              print _sr[0].is_saved
           else:

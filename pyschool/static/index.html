@@ -286,7 +286,7 @@ def login():
 
 def signup():
     #check that password and password2 are identical
-    console.log('signup')
+
     if len(document["signup_password"].value) < 6:
        #password must be at least 6 chars in length
        document["signup_message"].html="Password must be at least 6 characters in length"
@@ -302,19 +302,16 @@ def signup():
     _fp, _, _=urllib.request.urlopen(_url)
     _data=_fp.read()
 
-    console.log(_data)
     try:
        _json=json.loads(_data)
     except Exception as e:
        document["signup_message"].html="Error contacting server, %s" % str(e)
        return
 
-    console.log(_json)
     if _json['status'] == 'Okay':
        _jquery('#signup_dialog').dialog('close')
        return
 
-    console.log(_json["message"])
     document["signup_message"].html=_json["message"]
 
 def full_screen_toggle():
@@ -346,7 +343,7 @@ def open_filelist_dialog():
         if record['shareid'] not in ('', None):
            document['share_filelist_status'].text='/Shares/%s' % record['shareid']
         else:
-           document['share_filelist_status'].text='abhd'
+           document['share_filelist_status'].text=' '
 
     _dict={'token': window._token, 'command': 'filelist'}
     _fp,_,_=urllib.request.urlopen('/SharePermissions', data=_dict)
@@ -355,7 +352,6 @@ def open_filelist_dialog():
 
     _jquery('#share_filelist_table').treegrid({'treeField':'name', 
                                                'idField': 'id',
-                                               #'onClickCell': onClickCell,
                                                 'onClickRow': onClickRow
                                                })
 
@@ -433,15 +429,14 @@ function login_type_onChange(e) {
 
 // for some reason the python version of this file doesn't work with treegrid.
 function formatCheckBox(value, row) {
-
   if (row.type == 'file') return ''
 
   var click="sharelist_checkbox('"+row.fullname+"', this)"
   if (value) {
-     return '<input type="checkbox" onclick="'+click+'" value="on"></input>'
+     return '<input type="checkbox" onclick="'+click+'" checked></input>'
   }
 
-  return '<input type="checkbox" onclick="'+click+'" value="off"></input>'
+  return '<input type="checkbox" onclick="'+click+'"></input>'
 }
 
 </script>
@@ -681,7 +676,7 @@ function formatCheckBox(value, row) {
            <thead>
              <th data-options="field:'name',width:330">Directory</th>
              <th data-options="field:'shareid',width:100">ShareID</th>
-             <th data-options="field:'active',title:'Share',formatter:formatCheckBox,editor:{type:'checkbox',options:{on:true,off:false}}">Share</th>
+             <th data-options="field:'active',title:'Share',formatter:formatCheckBox,editor:{type:'checkbox',options:{on:true,off:false}},width:50">Share</th>
            <!--  <th data-options="field:'active',title:'Share',checkbox:true,editor:{type:'checkbox',options:{on:true,off:false}}">Share</th> -->
            </thead>
         </table>
