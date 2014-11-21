@@ -10,9 +10,12 @@ pyschool
 
 [pyschool](http://pyschool.net) is a user friendly web based python code editor.
 
+pyschool's primary objective is to create an education tool that reduces
+the technological barriers necessary to bring python to the classroom.
+
+pyschool will ALWAYS be free for educators and students, thus reducing another
+barrier, the financial barrier.
+
 pyschool is powered by [brython](http://brython.info), a python compiler 
 written in javascript and developed for a web browser environment.
 
-pyschool's primary objective is to create an education tool that 
-requires little to no setup and is free for teachers/students, and 
-thus reducing the burden to bring python to the classroom.
