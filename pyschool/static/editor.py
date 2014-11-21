@@ -9,7 +9,7 @@ import sys
 import time
 import traceback
 
-from browser import document
+from browser import document, window
 from javascript import console, JSObject
 
 
@@ -21,7 +21,7 @@ class Editor:
         self._editors = {}
         self._tabcount = 0
         self._tab_container = '\#%s' % tab_container
-        self._jquery = JSObject(jQuery)
+        self._jquery = JSObject(window.jQuery)
         self._jquery(self._tab_container).tabs()
 
     def add_editor(self, filename=None, content=""):
@@ -35,7 +35,7 @@ class Editor:
             'closable': True
         })
         #add ace editor to filename pre tag
-        _editor = JSObject(ace).edit(filename)
+        _editor = JSObject(window.ace).edit(filename)
         _session = _editor.getSession()
         _session.setMode("ace/mode/python")
         #_editor.setTheme("ace/theme/crimson_editor")

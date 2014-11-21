@@ -39,7 +39,7 @@ class FileSystem:
       self._root=root
 
   def _prefix_check(self, name):
-      console.log("_prefix_check:%s" % name)
+      #console.log("_prefix_check:%s" % name)
       if name.startswith(self._root):
          return name
 
@@ -93,7 +93,7 @@ class FileSystem:
       _root._isa_dir=True
 
       _files=_results['filelist']
-      console.log(_files)
+      #console.log(_files)
       for _file in _files:
           _fullname=_file['filename']
           if _fullname.startswith(directory):
@@ -112,9 +112,9 @@ class FileSystem:
                                       self._modified_date(_fullname))
                     if not isinstance(_tstamp, (int,)):
                        _tstamp=1
-                    console.log(_tstamp)
+                    #console.log(_tstamp)
                     _md=datetime.datetime.fromtimestamp(_tstamp)
-                    console.log(str(_md))
+                    #console.log(str(_md))
                     _pos.modified_date=str(_md)
       
       callback({'status': 'Okay', 'filelist': _root})
@@ -138,5 +138,4 @@ class FileSystem:
 
   def rm_file(self, filename, callback):
       filename=self._prefix_check(filename)
-
       callback(self._rm_file(filename))

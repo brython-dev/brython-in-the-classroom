@@ -1,3 +1,4 @@
+from browser import window
 from javascript import JSObject
 import sys
 

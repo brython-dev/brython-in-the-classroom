@@ -45,7 +45,7 @@ def CreateUserAccount(userid, password):
     return {'status': 'Okay', 'message': 'Account created'}
 
 def GetSharedFile(shareid, additional_path=''):
-    _sr=ShareRecord.query(ShareRecord.shareid==shareid).get()
+    _sr=ShareRecord.query(ShareRecord.shareid==shareid).fetch()
 
     if len(_sr) == 0:
        return {'status': 'Error', 'fileobj': None}

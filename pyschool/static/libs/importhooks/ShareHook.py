@@ -20,14 +20,14 @@ class ShareHook:
          fullname='/%s' % fullname
 
       self._url="%s%s.py" % (path, fullname)
-      print(self._url)
+      #print(self._url)
       #"/Shares?shareid=%s/%s.py" % (path[7:], fullname.replace('.', '/'))
 
   def find_module(self):
       _fp,_,_=urllib.request.urlopen(self._url)
       #try:
       _data=_fp.read()
-      print(_data)
+      #print(_data)
       _msg=json.loads(_data)
       if _msg['status'] != 'Okay':
          raise ImportError
@@ -35,7 +35,7 @@ class ShareHook:
       _fileobj=FileObject.FileObject()
       _fileobj.from_json(_msg['fileobj'])
       self._module=_fileobj.get_attribute('contents')
-      print(self._module)
+      #print(self._module)
       #except:
       #  raise ImportError
 

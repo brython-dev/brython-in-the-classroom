@@ -40,6 +40,7 @@ iframe {padding: 0px; width:98%;height:98%;}
 <script type="text/python" src="libs/importhooks/ShareHook.py"></script>
 <script type="text/python" src="libs/importhooks/localstorage.py"></script>
 <script type="text/python" src="libs/importhooks/custom_VFS.py"></script>
+<script type="text/python" src="libs/importhooks/FileSystemHook.py"></script>
 
 <script type="text/javascript">
 $(function(){
@@ -62,7 +63,7 @@ $(function(){
 from javascript import console, JSObject
 from browser import window
 
-_jquery=JSObject(jQuery)
+_jquery=JSObject(window.jQuery)
 
 def open_file_onRowClicked(row):
     if row._isa_file:
@@ -106,10 +107,10 @@ import local_storage_fs as filesystem
 from FileSystemBase import FileSystemNode
 import FileObject
 
-_jquery=JSObject(jQuery)
+_jquery=JSObject(window.jQuery)
 editors=editor.Editor('editortabs')
 
-global fs
+#global fs
 fs=filesystem.FileSystem('/pyschool')
 window._FS=fs
 display_message=JSObject(window.display_message)
@@ -119,8 +120,8 @@ document["pyconsole"].value=''  #clear console on load
 
 def run():
     #find selected Tab (and get its contents)
+    document['pyconsole'].value=''
     src=editors.getCurrentText()
-    document["pyconsole"].value=''
     t0 = time.perf_counter()
     try:
         exec(src,globals())
@@ -147,7 +148,7 @@ def toolbar_open_file_dialog():
            display_message('no files available')
            return
 
-        console.log(_filelist)
+        #console.log(_filelist)
         _jquery('#open_file_treegrid').treegrid('loadData', [_filelist])
         _jquery('#open_file_dialog').dialog('open')
 
@@ -162,15 +163,15 @@ def open_file():
            if fileobj is None:  #there was an error (or file doesn't exist)
               #show message saying file .
               display_message('file not found')
-              console.log('file not found')
+              #console.log('file not found')
            elif isinstance(fileobj, FileObject.FileObject):
               #open new tab with file contents
               editors.add_editor(filename=fileobj.get_attribute('filename'), 
                                  content=fileobj.get_attribute('contents'))
               display_message('file loaded successfully.')
-              console.log('file loaded successfully.')
+              #console.log('file loaded successfully.')
            else: #invalid fileobj, output error message
-              console.log('invalid fileobj')
+              display_message('Invalid file object.')
 
     _filename=document["open_file_textbox"].value
     fs.read_file(_filename, cb)
@@ -193,24 +194,24 @@ def open_url():
     if _data is None:  #there was an error (or URL doesn't exist)
        #show message saying file .
        display_message('URL not found')
-       console.log('URL not found')
+       #console.log('URL not found')
     elif isinstance(_data, str):
        #open new tab with file contents
        editors.add_editor(filename=_filename, 
                           content=_data)
        display_message('file loaded successfully.')
     else: #invalid data, output error message
-       console.log('invalid URL')
+       display_message('Invalid URL.')
 
 
 def save_file():
     def callback(_results):
         if _results['status'] == 'Okay':
            display_message(_results['message'])
-           console.log('file saved successfully')
+           #console.log('file saved successfully')
         else:
            display_message(_results['message'])
-           console.log('error saving file')
+           #console.log('error saving file')
 
     _filename=editors.getCurrentTabName()
     if _filename.startswith('Untitled-'):
@@ -264,9 +265,10 @@ def login():
        _json=json.loads(_data)
        if _json['status'] == 'Okay':
           _jquery('#login_dialog').dialog('close')
-          global fs
+          #global fs
           import remote_storage_fs
           fs=remote_storage_fs.GoogleDataStorage("/pyschool")
+          window._FS=fs
           fs.set_token(_json['token'])
           window._token=_json['token']
           document.cookie='token=%s;login_type=authenticate' % _json['token']
@@ -329,7 +331,7 @@ def full_screen_toggle():
 
 def sharelist_checkbox(fullname, obj):
     global sharelist
-    console.log(fullname, obj.checked)
+    #console.log(fullname, obj.checked)
     if obj.checked:
        sharelist[fullname]='Y'
     else:
@@ -618,8 +620,8 @@ function formatCheckBox(value, row) {
           Login Type:
           <select id="login_type" name="login_type1" class="easyui-combobox" 
                   data-options="onChange:login_type_onChange">
-             <option value="guest">Login as guest</option>
-             <option value="authenticate">Login with userid/password</option>
+             <option value="guest">save files locally</option>
+             <option value="authenticate">use remote storage</option>
           </select>
           <table id="login_user_entry" border="0" style="display:none">
              <tr><td>Userid:</td>
@@ -631,14 +633,14 @@ function formatCheckBox(value, row) {
              <tr><td colspan="2"><span id="login_message"></span></td></tr>
              <tr><td colspan="2">Don't have an account? 
                  <a href="javascript:void(0)" 
-                      onclick="$('#signup_message').val('');$('#signup_dialog').dialog('open')">Sign up</a></td>
+                      onclick="$('#signup_message').val('');$('#signup_dialog').dialog('open')">Sign up for a 100% free account</a></td>
              </tr>
           </table>
     </div>
 
     <div id="login_buttons">
         <a href="javascript:void(0)" class="easyui-linkbutton"
-            onclick="login()">Login</a>
+            onclick="login()">Submit</a>
        <!--
         <a href="javascript:void(0)" class="easyui-linkbutton"
             onclick="javascript:$('#login_dialog').dialog('close')">Close</a>

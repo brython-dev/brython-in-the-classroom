@@ -1,7 +1,7 @@
-// brython.js www.brython.info
+// brython.js brython.info
 // version [3, 3, 0, 'alpha', 0]
-// implementation [2, 2, 1, 'rc', 0]
-// version compiled from commented, indented source files at https://github.com/brython-dev/brython
+// implementation [3, 0, 1, 'alpha', 0]
+// version compiled from commented, indented source files at github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
 ;(function($B){if($B.isa_web_worker==true){
 window={}
@@ -9,7 +9,14 @@ window.XMLHttpRequest=XMLHttpRequest
 window.navigator={}
 window.navigator.userLanguage=window.navigator.language="fixme"
 window.clearTimeout=function(timer){clearTimeout(timer)}}
+$B.bound={}
+$B.modules={}
+$B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
+$B.vars={}
+$B.globals={}
+$B.exec_stack=[]
 $B.builtins={__repr__:function(){return "<module 'builtins>'"},__str__:function(){return "<module 'builtins'>"},}
+$B.builtin_funcs={}
 $B.__getattr__=function(attr){return this[attr]}
 $B.__setattr__=function(attr,value){
 if(['debug'].indexOf(attr)>-1){$B[attr]=value}
@@ -35,10 +42,10 @@ $B.has_json=typeof(JSON)!=="undefined"
 $B.has_websocket=(function(){try{var x=window.WebSocket;return x!==undefined}
 catch(err){return false}})
 })(__BRYTHON__)
-__BRYTHON__.implementation=[2,2,1,'rc',0]
-__BRYTHON__.__MAGIC__="2.2.1"
+__BRYTHON__.implementation=[3,0,1,'alpha',0]
+__BRYTHON__.__MAGIC__="3.0.1"
 __BRYTHON__.version_info=[3,3,0,'alpha',0]
-__BRYTHON__.builtin_module_names=["posix","_posixsubprocess","time","__random","_ajax","modulefinder","json","_multiprocessing","_timer","builtins","marshal","_io","math","_websocket","javascript","_jsre","_os","_sys","_browser","_svg","hashlib","_html","_imp","_warnings","_collections","_struct","_functools","_socket","_io","_testcapi","_codecs","_string","_markupbase","_thread","_weakref","_sre","_dummy_thread","_random","_csv"]
+__BRYTHON__.builtin_module_names=["posix","_posixsubprocess","time","__random","_ajax","modulefinder","json","_multiprocessing","dis","_timer","builtins","marshal","_io","math","_websocket","javascript","_jsre","_os","_sys","_browser","_svg","hashlib","_html","_imp","_warnings","_collections","_struct","_functools","_socket","_io","_testcapi","_codecs","_string","_markupbase","_thread","_weakref","_sre","_dummy_thread","_random","_csv"]
 __BRYTHON__.re_XID_Start=/[a-zA-Z_\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0640\u0641-\u064A\u066E-\u066F\u0671-\u06D3\u06D5\u06E5-\u06E6\u06EE-\u06EF\u06FA-\u06FC\u06FF]/
 __BRYTHON__.re_XID_Continue=/[a-zA-Z_\u0030-\u0039\u0041-\u005A\u005F\u0061-\u007A\u00AA\u00B5\u00B7\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u01BA\u01BB\u01BC-\u01BF\u01C0-\u01C3\u01C4-\u0241\u0250-\u02AF\u02B0-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EE\u0300-\u036F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03F5\u03F7-\u0481\u0483-\u0486\u048A-\u04CE\u04D0-\u04F9\u0500-\u050F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05B9\u05BB-\u05BD\u05BF\u05C1-\u05C2\u05C4-\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u0615\u0621-\u063A\u0640\u0641-\u064A\u064B-\u065E\u0660-\u0669\u066E-\u066F\u0670\u0671-\u06D3\u06D5\u06D6-\u06DC\u06DF-\u06E4\u06E5-\u06E6\u06E7-\u06E8\u06EA-\u06ED\u06EE-\u06EF\u06F0-\u06F9\u06FA-\u06FC\u06FF]/
 
@@ -58,8 +65,16 @@ $weight++
 }
 var $augmented_assigns={"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor"
 }
-function $_SyntaxError(C,msg,indent){console.log('-- syntax error '+C+' '+msg)
-var ctx_node=C
+var keys=$B.keys=function(obj){var res=[]
+for(var attr in obj){res.push(attr)}
+res.sort()
+return res
+}
+function clone(obj){var res=new Object()
+for(var attr in obj){res[attr]=obj[attr]}
+return res
+}
+function $_SyntaxError(C,msg,indent){var ctx_node=C
 while(ctx_node.type!=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
 var module=tree_node.module
@@ -74,8 +89,7 @@ $B.$SyntaxError(module,'invalid syntax',$pos)
 var $first_op_letter=[],$obj={}
 for(var $op in $operators)$obj[$op.charAt(0)]=1
 for(var $attr in $obj)$first_op_letter.push($attr)
-function $Node(type){
-this.type=type
+function $Node(type){this.type=type
 this.children=[]
 this.yield_atoms=[]
 this.add=function(child){this.children.push(child)
@@ -220,23 +234,32 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 this.parent=C.parent
 this.tree=[C]
+var scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["can't assign to function call "])
 }
 if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
-if(assigned.type=='id' && check_unbound){var scope=$get_scope(this)
+if(assigned.type=='id' && check_unbound){$B.bound[scope.id][assigned.value]=true
+var scope=$get_scope(this)
 if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
 }}else if(assigned.type=='call'){$_SyntaxError(C,["can't assign to function call"])
 }}}else if(C.type=='assign'){for(var i=0;i<C.tree.length;i++){var assigned=C.tree[i].tree[0]
-if(assigned.type=='id'){var scope=$get_scope(this)
-if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
-}}}}else{var assigned=C.tree[0]
-if(assigned && assigned.type=='id'){var scope=$get_scope(this)
+if(assigned.type=='id'){if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
+}
+$B.bound[scope.id][assigned.value]=true
+}}}else{var assigned=C.tree[0]
+if(assigned && assigned.type=='id'){if(!$B.globals[scope.id]||$B.globals[scope.id][assigned.value]===undefined){
+var node=$get_node(this)
+node.bound_before=$B.keys($B.bound[scope.id])
+$B.bound[scope.id][assigned.value]=true
+assigned.bound=true
+if(assigned.value=='xw'){console.log(assigned+' bound '+C)}}
 if(scope.ntype=='def' ||scope.ntype=='generator'){$check_unbound(assigned,scope,assigned.value)
 }}}
 this.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
 this.transform=function(node,rank){
+var scope=$get_scope(this)
 var left=this.tree[0]
 while(left.type==='assign'){
 var new_node=new $Node()
@@ -252,15 +275,16 @@ if(left.tree.length>1){left_items=left.tree
 }else if(left.tree[0].type==='list_or_tuple'||left.tree[0].type==='target_list'){left_items=left.tree[0].tree
 }else if(left.tree[0].type=='id'){
 var name=left.tree[0].value
-scope=$get_scope(this)
-scope.bound=scope.bound ||[]
-if(scope.bound.indexOf(name)==-1){scope.bound.push(name)}}
+if(__BRYTHON__.globals && __BRYTHON__.globals[scope.id]
+&& __BRYTHON__.globals[scope.id][name]){void(0)
+}else{left.tree[0].bound=true
+}}
 break
 case 'target_list': 
 case 'list_or_tuple':
 left_items=left.tree
 }
-if(left_items===null)return
+if(left_items===null){return}
 var right=this.tree[1]
 var right_items=null
 if(right.type==='list'||right.type==='tuple'||
@@ -283,6 +307,7 @@ new $NodeJSCtx(new_node,js)
 new_nodes.push(new_node)
 }
 for(var i=0;i<left_items.length;i++){var new_node=new $Node()
+new_node.id=$get_node(this).module
 var C=new $NodeCtx(new_node)
 left_items[i].parent=C
 var assign=new $AssignCtx(left_items[i],false)
@@ -296,7 +321,8 @@ $loop_num++
 }else{
 var new_node=new $Node()
 new_node.line_num=node.line_num
-var js='var $right'+$loop_num+'=getattr(iter('+right.to_js()+'),"__next__");'
+var js='var $right'+$loop_num+'=getattr'
+js +='(iter('+right.to_js()+'),"__next__");'
 new $NodeJSCtx(new_node,js)
 var new_nodes=[new_node]
 var rlist_node=new $Node()
@@ -329,6 +355,7 @@ new_nodes.push(check_node)
 }
 var j=0
 for(var i=0;i<left_items.length;i++){var new_node=new $Node()
+new_node.id=scope.id
 var C=new $NodeCtx(new_node)
 left_items[i].parent=C
 var assign=new $AssignCtx(left_items[i],false)
@@ -380,8 +407,7 @@ function is_simple(elt){return(elt.type=='expr' &&
 }
 var exprs=[]
 if(left.tree.length==1){var left_seq=left,args=[],ix=0
-while(left_seq.value.type=='sub' && left_seq.tree.length==1){
-if(is_simple(left_seq.tree[0])){args.push('['+left_seq.tree[0].to_js()+']')
+while(left_seq.value.type=='sub' && left_seq.tree.length==1){if(is_simple(left_seq.tree[0])){args.push('['+left_seq.tree[0].to_js()+']')
 }else{exprs.push('var $temp_ix'+$loop_num+'_'+ix+'='+left_seq.tree[0].to_js())
 args.push('[$temp_ix'+$loop_num+'_'+ix+']')
 left_seq.tree[0]={type:'id',to_js:(function(rank){return function(){return '$temp_ix'+$loop_num+'_'+rank}})(ix)
@@ -416,26 +442,8 @@ res=res.substr(0,res.length-1)
 left.func='getitem' 
 return res + ','+rvar+');None;'
 }}
-var scope=$get_scope(this)
-if(scope.ntype==="module"){var res='var '+left.to_js()
-if(left.to_js().charAt(0)!='$'){res +='=$globals["'+left.to_js()+'"]'
-}
-return res + '='+right.to_js()+';None;'
-}
-if(scope.is_function){
-var _ljs=left.to_js()
-if(scope.globals && scope.globals.indexOf(left.value)>-1){return _ljs+'=$globals["'+_ljs+'"]='+right.to_js()
-}
-var res='var '+_ljs+'=$locals["'+_ljs+'"]='
-return res + right.to_js()+';None;'
-}
-if(scope.ntype==='class'){
-if(left.type=="raw_js")return left.to_js()+'='+right.to_js()
-left.is_left=true 
-var attr=left.to_js()
-left.in_class='$class.'+attr
-return '$class.'+attr+'='+right.to_js()
-}}}
+return left.to_js()+'='+right.to_js()
+}}
 function $AttrCtx(C){this.type='attribute'
 this.value=C.tree[0]
 this.parent=C
@@ -452,6 +460,9 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 this.op=op
 this.tree=[C]
+var scope=$get_scope(this)
+$get_node(this).bound_before=$B.keys($B.bound[scope.id])
+this.module=scope.module
 this.toString=function(){return '(augm assign) '+this.tree}
 this.transform=function(node,rank){var func='__'+$operators[op]+'__'
 var offset=0,parent=node.parent
@@ -465,6 +476,7 @@ new $NodeJSCtx(new_node,'var $temp,$left')
 parent.insert(rank,new_node)
 offset++
 var new_node=new $Node()
+new_node.id=this.module
 var new_ctx=new $NodeCtx(new_node)
 var new_expr=new $ExprCtx(new_ctx,'js',false)
 var _id=new $RawJSCtx(new_expr,'$temp')
@@ -474,7 +486,7 @@ _id.parent=assign
 parent.insert(rank+offset,new_node)
 offset++
 }
-var prefix=''
+var prefix='',in_class=false
 switch(op){case '+=':
 case '-=':
 case '*=':
@@ -491,24 +503,25 @@ if(scope.globals && scope.globals.indexOf(C.tree[0].value)>-1){prefix='$globals'
 break
 case 'class':
 var new_node=new $Node()
-new $NodeJSCtx(new_node,'$left='+C.to_js())
+new $NodeJSCtx(new_node,'var $left='+C.to_js())
 parent.insert(rank+offset,new_node)
+in_class=true
 offset++
 }}}
-if(prefix){var left=C.tree[0].value
+var left=C.tree[0].to_js()
+prefix=prefix && !C.tree[0].unknown_binding
+if(prefix){var left1=in_class ? '$left' : left
 var new_node=new $Node()
 js=right_is_int ? 'if(' : 'if(typeof $temp.valueOf()=="number" && '
-js +='typeof '+left+'.valueOf()=="number"){'
+js +='typeof '+left1+'.valueOf()=="number"){'
 js +=right_is_int ? '(' : '(typeof $temp=="number" && '
-js +='typeof '+left+'=="number") ? '
-if(scope.ntype=='class'){js+='$left'}
-else{js +=left}
-js +=op+right
-js +=' : (typeof '+left+'=="number" ? '+left+op
+js +='typeof '+left1+'=="number") ? '
+js +=left+op+right
+js +=' : (typeof '+left1+'=="number" ? '+left+op
 js +=right_is_int ? right : right+'.valueOf()'
 js +=' : '+left + '.value ' +op
 js +=right_is_int ? right : right+'.valueOf()'
-js +=');'+prefix+'["'+left+'"]='+left
+js +=');' 
 js +='}'
 new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
@@ -535,6 +548,7 @@ new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
 offset ++
 var aa1=new $Node()
+aa1.id=this.module
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
 expr1.tree=C.tree
@@ -559,7 +573,6 @@ js3 +='=getattr('+C.to_js()
 js3 +=',"'+func+'")('+right+')'
 new $NodeJSCtx(aa3,js3)
 aa2.add(aa3)
-js=prefix+'["'+C.to_js()+'"]='+C.to_js
 return offset
 }
 this.to_js=function(){return ''
@@ -624,7 +637,7 @@ $_SyntaxError(C,'break outside of a loop')
 }
 }
 }
-this.to_js=function(){return 'var $no_break'+this.loop_ctx.loop_num+'=false;break'
+this.to_js=function(){return '$locals["$no_break'+this.loop_ctx.loop_num+'"]=false;break'
 }}
 function $CallArgCtx(C){this.type='call_arg'
 this.toString=function(){return 'call_arg '+this.tree}
@@ -645,78 +658,16 @@ C.tree.push(this)
 }else{
 C.args=this
 }
+this.expect='id'
 this.tree=[]
 this.start=$pos
 this.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 this.to_js=function(){if(this.tree.length>0){if(this.tree[this.tree.length-1].tree.length==0){
 this.tree.pop()
 }}
-if(this.func!==undefined){switch(this.func.value){case 'eval':
-case 'exec': 
-var module=$get_module(this).module
-var arg=this.tree[0].to_js()
-var ns=''
-var _name=module+',exec_'+Math.random().toString(36).substr(2,8)
-if(this.tree.length>1){var arg2=this.tree[1]
-if(arg2.tree!==undefined&&arg2.tree.length>0){arg2=arg2.tree[0]
-}
-if(arg2.tree!==undefined&&arg2.tree.length>0){arg2=arg2.tree[0]
-}
-if(arg2.type==='call'){if(arg2.func.value==='globals'){
-ns='globals'
-_name=module
-}}else if(arg2.type==='id'){ns=arg2.value
-_name=ns
-}}
-$B.$py_module_path[_name]=$B.$py_module_path[module]
-var _r='(function(){try{'
-if(ns!=='' && ns!=='globals'){_r +='\n    var $globals = {}\n'
-_r +='\n    for(var $i=0;$i<'+ns+'.$keys.length;$i++){\n'
-_r +='      eval("var "+'+ns+'.$keys[$i]+"='
-_r +='$globals['+ns+'.$keys[$i]]='+ns+'.$values[$i]")\n};\n'
-}
-_r +='\n    for(var $attr in $globals){eval("var "+$attr+"=$globals[$attr]")};\n'
-_r +='\n    for(var $attr in $locals){eval("var "+$attr+"=$locals[$attr]")};\n'
-_r +='    var $arg = '+arg+',$jscode;\n'
-_r +='    if($arg.__class__===__BRYTHON__.$CodeObjectDict)'
-_r +='{$jscode=$arg.src}\n'
-_r +='    else{$jscode = __BRYTHON__.py2js($arg,"'+_name+'").to_js()};\n'
-_r +='    if(__BRYTHON__.debug>1){console.log($jscode)};\n'
-_r +='    try{var $res = eval($jscode)}'
-_r +='    catch(err){if(err.name=="SyntaxError")'
-_r +='{console.log("Javascript syntax error in\\n"+$jscode)};'
-_r +=';throw err}\n;'
-if(ns=='globals'){
-_r +=';for(var $attr in __BRYTHON__.vars["'+_name+'"])'
-_r +='{$globals[$attr]=__BRYTHON__.vars["'+module+'"][$attr]='
-_r +='__BRYTHON__.vars["'+_name+'"][$attr]};'
-}else if(ns !=''){
-_r +=';for(var $attr in __BRYTHON__.vars["'+_name+'"])'
-_r +='{__BRYTHON__.builtins.dict.$dict.__setitem__('+ns+',$attr,'
-_r +='__BRYTHON__.vars["'+_name+'"][$attr])};' 
-}else{
-_r +=';for(var $attr in __BRYTHON__.vars["'+_name+'"]){'
-_r +='\nif($attr.search(/[\.]/)>-1){continue}\n'
-_r +='eval("var "+$attr+"='
-_r +='$globals[$attr]='
-_r +='__BRYTHON__.vars[\\"'+module+'\\"][$attr]='
-_r +='__BRYTHON__.vars[\\"'+_name+'\\"][$attr]")};'
-}
-_r +='\n    if($res===undefined){return None};return $res'
-_r +='\n}\ncatch(err){throw __BRYTHON__.exception(err)}'
-_r +='})()\n'
-var new_node=new $Node()
-var set_ns=';for(var $attr in __BRYTHON__.vars["'+_name+'"]){\n'
-set_ns +='    if($attr.search(/[\.]/)>-1){continue}\n    '
-set_ns +='eval("var "+$attr+"=__BRYTHON__.vars[\\"'+_name
-set_ns +='\\"][$attr]")\n};\n'
-new $NodeJSCtx(new_node,set_ns)
-var node=$get_node(this)
-for(var i=0;i<node.parent.children.length;i++){if(node===node.parent.children[i]){break}}
-node.parent.insert(i+1,new_node)
-return _r
-case 'classmethod':
-return 'classmethod($class,'+$to_js(this.tree)+')'
+var func_js=this.func.to_js()
+if(this.func!==undefined){switch(this.func.value){case 'classmethod':
+return 'classmethod('+$to_js(this.tree)+')'
 case 'locals':
 var scope=$get_scope(this),mod=$get_module(this)
 if(scope !==null &&(scope.ntype==='def'||scope.ntype=='generator')){return 'locals("'+scope.C.tree[0].id+'","'+mod.module+'")'
@@ -754,29 +705,31 @@ return 'getattr('+$to_js(this.tree)+',"__invert__")()'
 }
 }
 }
-if(this.tree.length>-1){if(__BRYTHON__.$blocking_function_names){var _func_name=this.func.to_js()
+if(this.tree.length>-1){if(__BRYTHON__.$blocking_function_names){var _func_name=func_js
 if(_func_name.indexOf(__BRYTHON__.$blocking_function_names)> -1){console.log("candidate blocking function.. ",_func_name)
 }}
-if(this.func.type=='id'){var $simple=true
-for(var i=0;i<this.tree.length;i++){if(this.tree[i].type=='id'){continue}
-if(this.tree[i].tree[0].type!='expr'){$simple=false;break}}
-if($simple){var res='('+this.func.to_js()+'.$is_func ? '
-res +=this.func.to_js()+' : '
-res +='getattr('+this.func.to_js()+',"__call__"))('
+if(this.func.type=='id'){var scope=$get_scope(this)
+if(this.func.is_builtin){
+if($B.builtin_funcs[this.func.value]!==undefined){var res=func_js + '('
+res +=(this.tree.length>0 ? $to_js(this.tree): '')
+return res + ')'
+}}else if($B.bound[scope.id][this.func.value]=='class'){
+var res=func_js + '('
+res +=(this.tree.length>0 ? $to_js(this.tree): '')
+return res + ')'
+}
+var res='('+func_js+'.$is_func ? '
+res +=func_js+' : '
+res +='getattr('+func_js+',"__call__"))('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 res +=')'
-}else{var res='('+this.func.to_js()+'.$is_func ? '
-res +=this.func.to_js()+' : '
-res +='getattr('+this.func.to_js()+',"__call__"))('
+}else{var res='getattr('+func_js+',"__call__")('
 res +=(this.tree.length>0 ? $to_js(this.tree): '')
 res +=')'
-}}else{var res='getattr('+this.func.to_js()+',"__call__")('
-res +=(this.tree.length>0 ? $to_js(this.tree): '')
-res +=')' 
 }
 return res
 }
-return 'getattr('+this.func.to_js()+',"__call__")()'
+return 'getattr('+func_js+',"__call__")()'
 }}}
 function $ClassCtx(C){this.type='class'
 this.parent=C
@@ -784,40 +737,60 @@ this.tree=[]
 C.tree.push(this)
 this.expect='id'
 this.toString=function(){return '(class) '+this.name+' '+this.tree+' args '+this.args}
+var scope=this.scope=$get_scope(this)
+this.parent.node.parent_block=scope
+this.parent.node.bound={}
+this.set_name=function(name){this.random=Math.random().toString(36).substr(2,8)
+this.name=name
+this.id=C.node.module+'-'+name
+this.id +='-'+this.random
+$B.bound[this.id]={}
+$B.modules[this.id]=this.parent.node
+this.parent.node.id=this.id
+var parent_block=scope
+while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent
+}
+while(parent_block.C &&['def','BRgenerator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
+}
+this.parent.node.parent_block=parent_block
+$B.vars[this.id]={}
+$B.bound[this.scope.id][name]='class'
+if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)
+}}}
 this.transform=function(node,rank){
 if(this.transformed)return
 this.doc_string=$get_docstring(node)
 var instance_decl=new $Node()
-var js='var $class={}'
-if($B.debug>0){js='var $class = {$def_line:__BRYTHON__.line_info}'}
+var js='var $locals = __BRYTHON__.vars["'+this.id+'"]='
+if($B.debug>0){js +='{$def_line:__BRYTHON__.line_info}'}
+else{js +='{}'}
 new $NodeJSCtx(instance_decl,js)
 node.insert(0,instance_decl)
 var ret_obj=new $Node()
-new $NodeJSCtx(ret_obj,'return $class')
+new $NodeJSCtx(ret_obj,'return __BRYTHON__.vars["'+this.id+'"];')
 node.insert(node.children.length,ret_obj)
 var run_func=new $Node()
 new $NodeJSCtx(run_func,')()')
 node.parent.insert(rank+1,run_func)
+var prefix='__BRYTHON__.vars["'+this.id+'"]'
 rank++
-js='$'+this.name+'.__doc__='+(this.doc_string ||'None')
+js=prefix+'.__doc__='+(this.doc_string ||'None')
 var ds_node=new $Node()
 new $NodeJSCtx(ds_node,js)
 node.parent.insert(rank+1,ds_node)
 rank++
-js='$'+this.name+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
+js=prefix+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
 var ds_node=new $Node()
 new $NodeJSCtx(ds_node,js)
 node.parent.insert(rank+1,ds_node)
 rank++
-js='$'+this.name+'.__module__="'+$get_module(this).module+'"'
+js=prefix+'.__module__="'+$get_module(this).module+'"'
 var mod_node=new $Node()
 new $NodeJSCtx(mod_node,js)
 node.parent.insert(rank+1,mod_node)
 var scope=$get_scope(this)
-js='var '+this.name
-if(!(scope.ntype==="module"||scope.ntype!=='class')){js +=' = $class.'+this.name
-}
-js +='=__BRYTHON__.$class_constructor("'+this.name+'",$'+this.name
+js='__BRYTHON__.vars["'+scope.id+'"]["'+this.name+'"]'
+js +='=__BRYTHON__.$class_constructor("'+this.name+'",$'+this.name+'_'+this.random
 if(this.args!==undefined){
 var arg_tree=this.args.tree,args=[],kw=[]
 for(var i=0;i<arg_tree.length;i++){var _tmp=arg_tree[i]
@@ -844,17 +817,13 @@ if(scope.ntype==='module'){js='__BRYTHON__.vars["'+scope.module+'"]["'
 js +=this.name+'"]='+this.name
 var w_decl=new $Node()
 new $NodeJSCtx(w_decl,js)
-node.parent.insert(rank+3,w_decl)
-rank++
 }
 var end_node=new $Node()
 new $NodeJSCtx(end_node,'None;')
 node.parent.insert(rank+3,end_node)
-scope.bound=scope.bound ||[]
-if(scope.bound.indexOf(this.name)==-1){scope.bound.push(this.name)}
 this.transformed=true
 }
-this.to_js=function(){return 'var $'+this.name+'=(function()'}}
+this.to_js=function(){return 'var $'+this.name+'_'+this.random+'=(function()'}}
 function $CompIfCtx(C){this.type='comp_if'
 C.parent.intervals.push($pos)
 this.parent=C
@@ -896,7 +865,7 @@ this.transform=function(node,rank){if(this.token=="while"){var scope=$get_scope(
 if(scope.ntype=='BRgenerator'){this.parent.node.loop_start=this.loop_num
 }
 var new_node=new $Node()
-var js='var $no_break'+this.loop_num+'=$locals["$no_break'
+var js='$locals["$no_break'
 js +=this.loop_num+'"]=true'
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank,new_node)
@@ -905,7 +874,7 @@ return 2
 this.to_js=function(){var tok=this.token
 if(tok==='elif'){tok='else if'}
 var res=tok+'(bool('
-if(tok=='while'){res +='$no_break'+this.loop_num+' && '}
+if(tok=='while'){res +='$locals["$no_break'+this.loop_num+'"] && '}
 if(this.tree.length==1){res +=$to_js(this.tree)+'))'
 }else{
 res +=this.tree[0].to_js()+'))'
@@ -913,6 +882,11 @@ if(this.tree[1].tree.length>0){res +='{'+this.tree[1].to_js()+'}'
 }}
 return res
 }}
+function $ContinueCtx(C){this.type='continue'
+this.parent=C
+C.tree.push(this)
+this.toString=function(){return '(continue)'}
+this.to_js=function(){return 'continue'}}
 function $DecoratorCtx(C){this.type='decorator'
 this.parent=C
 C.tree.push(this)
@@ -931,17 +905,15 @@ var obj=children[func_rank].C.tree[0]
 var callable=children[func_rank].C
 var res=obj.name+'=',tail=''
 var scope=$get_scope(this)
-if(scope !==null && scope.ntype==='class'){res='$class.'+obj.name+'='
-}
+var ref='$locals["'+obj.name+'"]'
+res=ref+'='
 var _blocking_flag=false
-for(var i=0;i<decorators.length;i++){
-var dec=this.dec_ids[i]
+for(var i=0;i<decorators.length;i++){var dec=this.dec_ids[i]
 res +=dec+'('
-if(decorators[i][0].tree[0].value=='classmethod'){res+='$class,'}
 tail +=')'
 }
-res +=(scope.ntype==='class' ? '$class.' : '')
-res +=obj.name+tail
+res +=ref+tail
+$B.bound[scope.id][obj.name]=true
 if(_blocking_flag==true){$B.$blocking_function_names=$B.$blocking_function_names ||[]
 $B.$blocking_function_names.push(obj.name)
 console.log('blocking...',obj.name)
@@ -966,33 +938,61 @@ this.yields=[]
 C.tree.push(this)
 this.enclosing=[]
 var scope=this.scope=$get_scope(this)
-while(1){if(scope.is_function){this.enclosing.push(scope.C.tree[0].id)
-scope=$get_scope(scope.C.tree[0])
-}else{break}}
-this.set_name=function(name){this.name=name
-this.id=C.node.module+'-'+name+'-'
-this.id +=Math.random().toString(36).substr(2,8)
-$B.vars[this.id]={}
-this.scope.bound=this.scope.bound ||[]
-if(this.scope.bound.indexOf(name)==-1){this.scope.bound.push(name)}
+var parent_block=scope
+while(parent_block.C && parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent
+}
+while(parent_block.C &&['def','BRgenerator'].indexOf(parent_block.C.tree[0].type)==-1){parent_block=parent_block.parent
+}
+this.parent.node.parent_block=parent_block
+this.module=scope.module
+this.set_name=function(name){var id_ctx=new $IdCtx(this,name)
+this.name=name
+this.id=this.scope.id+'-'+name
+this.id +='-'+Math.random().toString(36).substr(2,8)
+this.parent.node.id=this.id
+$B.modules[this.id]=this.parent.node
+$B.bound[this.id]={}
+$B.vars[this.id]=$B.vars[this.id]||{}
+$B.bound[this.scope.id][name]='def'
+id_ctx.bound=true
 if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)
-}}}
+}}
+var thisnode=this.parent.node
+while(thisnode.parent_block){thisnode=thisnode.parent_block
+}
+var pblock=parent_block,pblocks=[pblock.id]
+while(true){if(pblock.parent_block && pblock.parent_block.id!='__builtins__'){pblocks.push(pblock.parent_block.id)
+pblock=pblock.parent_block
+}else{break}}
+var env={}
+for(var i=pblocks.length;i>=0;i--){for(var attr in $B.bound[pblocks[i]]){env[attr]=pblocks[i]}}
+delete env[name]
+this.env=env
+}
 this.toString=function(){return 'def '+this.name+'('+this.tree+')'}
 this.transform=function(node,rank){
 if(this.transformed!==undefined)return
+var scope=$get_scope(this)
 this.doc_string=$get_docstring(node)
 this.rank=rank 
 var fglobs=this.parent.node.globals
 var indent=node.indent+16
 var header=$ws(indent)
-var scope=$get_scope(this)
+if(this.name.substr(0,15)=='lambda_'+$B.lambda_magic){var pblock=$B.modules[scope.id].parent_block
+if(pblock.C && pblock.C.tree[0].type=="def"){this.enclosing.push(pblock)
+}}
+var pnode=this.parent.node
+while(pnode.parent && pnode.parent.is_def_func){this.enclosing.push(pnode.parent.parent)
+pnode=pnode.parent.parent
+}
 var required='',required_list=[]
 var defaults=[],defs=[],defs1=[]
 var after_star=[]
 var other_args=null
 var other_kw=null
 this.args=[]
-for(var i=0;i<this.tree[0].tree.length;i++){var arg=this.tree[0].tree[i]
+var func_args=this.tree[1].tree
+for(var i=0;i<func_args.length;i++){var arg=func_args[i]
 if(arg.type==='func_arg_id'){if(arg.tree.length===0){if(other_args==null){required+='"'+arg.name+'",'
 required_list.push(arg.name)
 }else{after_star.push('"'+arg.name+'"')
@@ -1006,55 +1006,58 @@ this.args.push(arg.name)
 this.defs=defs
 if(required.length>0)required=required.substr(0,required.length-1)
 var nodes=[],js
-var mod_name=$get_module(this).module
-if(this.type=='def' && scope.ntype!='BRgenerator' && mod_name!=='__main__'){if(mod_name!=='__main__'){
+var global_scope=scope
+while(global_scope.parent_block.id !=='__builtins__'){global_scope=global_scope.parent_block
+if(global_scope===undefined){console.log('global scope undef!!!'+this.name)}
+if(global_scope.parent_block===undefined){console.log('parent undef pour '+global_scope.id)}}
+var mod_name=global_scope.id
 var new_node=new $Node()
-var js='$globals = __BRYTHON__.vars["'+mod_name+'"];' 
+var js='var $globals = __BRYTHON__.vars["'+mod_name+'"];' 
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-}
-if(fglobs===undefined){js='for(var $attr in $globals){eval("var "+$attr+"=$globals[$attr]")}'
-}else{
-js='\n'+header+'var $fglobs = ['
-for(var i=0;i<fglobs.length;i++){js+='"'+fglobs[i]+'",'}
-js +='];\n'+header
-js +='for(var $attr in $globals){\n'+header
-js +='    if($fglobs.indexOf($attr)==-1)'
-js +='{eval("var "+$attr+"=$globals[$attr]")}'
-js +='else{eval($attr+"=$globals[$attr]")}\n'+header+'}'
-}
-var new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
-}
+js='var $locals_id="'+this.id+'";'
 if(this.type=='def'){
-js='var $locals = __BRYTHON__.vars["'+this.id+'"]=new Object();'
+js +='var $locals = __BRYTHON__.vars[$locals_id]=new Object();'
 }else{
-js='var $locals = __BRYTHON__.vars["'+this.id+'"];'
+js +='var $locals = __BRYTHON__.vars[$locals_id];'
 }
 var new_node=new $Node()
 new_node.locals_def=true
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
-if(this.type=='BRgenerator'){js='var $globals = __BRYTHON__.vars["'+mod_name+'"]'
+if(defs1.length>0){js='for(var $var in $defaults){$locals[$var]=$defaults[$var]}'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 }
-if(defs1.length>0){js='for(var $var in $defaults){eval("var "+$var+"=$locals[$var]=$defaults[$var]")}'
-var new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
+var passed_alias={},passed_ix=0
+this.env=[]
+if(this.type=='def'){var enclosing=[],passed=[]
+for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
+for(var attr in $B.bound[func.id]){if(attr!==this.name){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
 }
-for(var i=this.enclosing.length-1;i>=0;i--){var js='var $ns=__BRYTHON__.vars["'+this.enclosing[i]+'"]'
-var new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
-var js='for(var $var in $ns){$locals[$var]=$ns[$var]}'
-var new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-nodes.push(new_node)
+passed.push('$var'+passed_ix)
+passed_alias[attr]='$var'+passed_ix
+passed_ix++
+enclosing.push('$B.vars["'+func.id+'"]["'+attr+'"]')
+}}
+for(var attr in __BRYTHON__.bound[func.id]){if(attr!=this.name &&($B.globals[this.id]===undefined ||
+$B.globals[this.id][attr]===undefined)){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
 }
+__BRYTHON__.bound[this.id][attr]=true
+this.env.push(attr)
+}}}
+for(var i=this.enclosing.length-1;i>=0;i--){var func=this.enclosing[i]
+for(var attr in $B.bound[func.id]){if(attr!==this.name &&($B.globals[this.id]===undefined ||
+$B.globals[this.id][attr]===undefined)){if(func===scope && $B.bound[func.id][attr]!='arg'){continue
+}
+new_node=new $Node()
+var js='if('+passed_alias[attr]+'!==undefined)'
+js +='{$locals["'+attr+'"] = '+passed_alias[attr]+'};'
+new $NodeJSCtx(new_node,js)
+nodes.push(new_node)
+}}}}
+this.passed_ix=passed_ix
 var make_args_nodes=[]
 var js='var $ns=__BRYTHON__.$MakeArgs("'+this.name+'",arguments,new Array('+required+'),'
 js +='new Array('+defaults.join(',')+'),'+other_args+','+other_kw+
@@ -1062,8 +1065,7 @@ js +='new Array('+defaults.join(',')+'),'+other_args+','+other_kw+
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
-js='for(var $var in $ns){eval("var "+$var+"=$ns[$var]");'
-js +='$locals[$var]=$ns[$var]}'
+js='for(var $var in $ns){$locals[$var]=$ns[$var]}'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 make_args_nodes.push(new_node)
@@ -1071,8 +1073,8 @@ var only_positional=false
 if(defaults.length==0 && other_args===null && other_kw===null &&
 after_star.length==0){
 only_positional=true
-if(__BRYTHON__.debug>0 ||required_list.length>0){var js='var $simple=true;for(var i=0;i<arguments.length;i++)'
-js +='{if(arguments[i].$nat!=undefined){$simple=false;break}}'
+if(__BRYTHON__.debug>0 ||required_list.length>0){var js='var $simple=true;for(var $i=0;$i<arguments.length;$i++)'
+js +='{if(arguments[$i].$nat!=undefined){$simple=false;break}}'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
@@ -1113,7 +1115,7 @@ wrong_nb_node.add(new_node)
 }
 for(var i=0;i<required_list.length;i++){var arg=required_list[i]
 var new_node=new $Node()
-var js='var '+arg+'=$locals["'+arg+'"]=__BRYTHON__.$JS2Py(arguments['+i+'])'
+var js='$locals["'+arg+'"]=__BRYTHON__.$JS2Py(arguments['+i+'])'
 new $NodeJSCtx(new_node,js)
 else_node.add(new_node)
 }}else{nodes=nodes.concat(make_args_nodes)
@@ -1121,6 +1123,7 @@ else_node.add(new_node)
 for(var i=nodes.length-1;i>=0;i--)node.children.splice(0,0,nodes[i])
 var def_func_node=new $Node()
 new $NodeJSCtx(def_func_node,'return function()')
+def_func_node.is_def_func=true
 for(var i=0;i<node.children.length;i++)def_func_node.add(node.children[i])
 var last_instr=node.children[node.children.length-1].C.tree[0]
 if(last_instr.type!=='return' && this.type!='BRgenerator'){new_node=new $Node()
@@ -1131,16 +1134,19 @@ node.children=[]
 node.add(def_func_node)
 var ret_node=new $Node()
 var txt=')('
+if(this.type=='def'){txt+=enclosing.join(',')}
 new $NodeJSCtx(ret_node,txt+')')
 node.parent.insert(rank+1,ret_node)
 var offset=2
 if(this.type==='BRgenerator' && !this.declared){js='__BRYTHON__.$BRgenerator('
-if(scope.ntype==='class')js +='$class.'
-js +='$'+this.name+',"'+this.id+'"'
-if(scope.ntype=='class')js +=',$class'
+var scope_lib='__BRYTHON__.vars["'+scope.id+'"]'
+if(scope.C===undefined){scope_lib='$globals'}
+js +='"'+scope.id+'","'+this.name+'"'
+js +=',"'+this.id+'"'
+if(scope.ntype=='class')js +=',__BRYTHON__.vars["'+scope.id+'"]'
 js +=')'
-$B.modules[this.id]=this
 var gen_node=new $Node()
+gen_node.id=this.module
 var ctx=new $NodeCtx(gen_node)
 var expr=new $ExprCtx(ctx,'id',false)
 var name_ctx=new $IdCtx(expr,this.name)
@@ -1152,31 +1158,23 @@ node.parent.insert(rank+offset,gen_node)
 this.declared=true
 offset++
 }
-js=''
-if(scope.ntype==='class')js='$class.'
-js +=this.name+'.__name__="'+this.name+'"'
-if(scope.is_function){
-js +=';$locals["'+this.name+'"]='+this.name
+var prefix='__BRYTHON__.vars["'+scope.id+'"]["'+this.name+'"]'
+if(scope.C===undefined){prefix='$globals["'+this.name+'"]'}
+else if(scope.ntype=='def' ||scope.ntype=='BRgenerator'){prefix='$locals["'+this.name+'"]'
 }
+prefix=this.tree[0].to_js()
+js=prefix+'.__name__="'+this.name+'"'
 var name_decl=new $Node()
 new $NodeJSCtx(name_decl,js)
 node.parent.insert(rank+offset,name_decl)
 offset++
-if(scope.ntype==='module'){js='$globals["'+this.name+'"]='+this.name
-js +=';'+this.name+".$type='function';"+this.name+'.$is_func=true;'
-new_node=new $Node()
-new $NodeJSCtx(new_node,js)
-node.parent.insert(rank+offset,new_node)
-offset++
-}
 var module=$get_module(this)
-var prefix=scope.ntype=='class' ? '$class.' : ''
-js=prefix+this.name+'.__module__ = "'+module.module+'";'
+js=prefix+'.__module__ = "'+module.module+'";'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
 offset++
-js=prefix+this.name+'.__doc__='+(this.doc_string ||'None')+';'
+js=prefix+'.__doc__='+(this.doc_string ||'None')+';None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 node.parent.insert(rank+offset,new_node)
@@ -1187,9 +1185,10 @@ new $NodeJSCtx(new_node,this.name+'.$blocking = true; // used in __call__')
 node.parent.insert(rank+offset,new_node)
 offset++
 }
-js=prefix+this.name+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
+js=prefix+'.__code__={__class__:__BRYTHON__.$CodeDict};None;'
 new_node=new $Node()
 new $NodeJSCtx(new_node,js)
+node.parent.insert(rank+offset,new_node)
 var default_node=new $Node()
 var js='None'
 if(defs1.length>0){js='var $defaults = {'+defs1.join(',')+'}'}
@@ -1197,33 +1196,23 @@ new $NodeJSCtx(default_node,js)
 node.insert(0,default_node)
 this.transformed=true
 }
-this.add_generator_declaration=function(){
-var scope=$get_scope(this)
-var node=this.parent.node
-if(this.type==='generator' && !this.declared){var offset=2
-if(this.decorators !==undefined)offset++
-js='__BRYTHON__.$generator('
-if(scope.ntype==='class')js +='$class.'
-js +='$'+this.name+')'
-var gen_node=new $Node()
-var ctx=new $NodeCtx(gen_node)
-var expr=new $ExprCtx(ctx,'id',false)
-var name_ctx=new $IdCtx(expr,this.name)
-var assign=new $AssignCtx(expr)
-var expr1=new $ExprCtx(assign,'id',false)
-var js_ctx=new $NodeJSCtx(assign,js)
-expr1.tree.push(js_ctx)
-node.parent.insert(this.rank+offset,gen_node)
-this.declared=true
-}}
-this.to_js=function(){var scope=$get_scope(this)
-var name=this.name
-var res
-if(this.type==='generator'||this.type==='BRgenerator')name='$'+name
-if(scope.ntype==="module" ||scope.ntype!=='class'){res='var '+name+'=(function('
-}else{res='$class.'+name+'=(function('
+this.to_js=function(func_name){if(func_name!==undefined){return func_name+'=(function()'
+}else{var scope=$get_scope(this)
+var res=this.tree[0].to_js()+'=(function('
+if(this.type=='def'){var args=[]
+for(var i=0;i<this.passed_ix;i++){args.push('$var'+i)}
+res +=args.join(',')
 }
-return res + ')'
+res +=')'
+return res
+var name=this.name
+var res='__BRYTHON__.vars["'+scope.id+'"]'
+if(scope.C===undefined){res='$globals'}
+else if(scope.ntype=='def'||scope.ntype=='BRgenerator'){res='$locals'
+}
+res +='["'+name+'"]'
+}
+return res+'=(function()'
 }}
 function $DelCtx(C){this.type='del'
 this.parent=C
@@ -1240,20 +1229,11 @@ this.tree=[]
 return res
 }else{var expr=this.tree[0].tree[0]
 var scope=$get_scope(this)
-function del_name(scope,name){var js='delete '+name+';'
-if(scope.ntype==='module'){js+='delete $globals["'+name+'"]'
-}else if(scope.is_function){if(scope.globals && scope.globals.indexOf(name)>-1){
-js+='delete $globals["'+name+'"]'
-}else{
-js+='delete $locals["'+name+'"]'
-}}
-return js+';'
-}
 switch(expr.type){case 'id':
-return del_name(scope,expr.to_js())
+return 'delete '+expr.to_js()+';'
 case 'list_or_tuple':
 var res=''
-for(var i=0;i<expr.tree.length;i++){res +=del_name(expr.tree[i].to_js())
+for(var i=0;i<expr.tree.length;i++){res +='delete '+expr.tree[i].to_js()+';'
 }
 return res
 case 'sub':
@@ -1312,6 +1292,9 @@ C.tree.push(this)
 this.tree=[]
 this.expect='id'
 this.toString=function(){return '(except) '}
+this.set_alias=function(alias){this.tree[0].alias=alias
+$B.bound[$get_scope(this).id][alias]=true
+}
 this.to_js=function(){
 if(this.tree.length===0)return 'else'
 if(this.tree.length===1 && this.tree[0].name==='Exception')return 'else if(1)'
@@ -1347,25 +1330,22 @@ this.parent=C
 this.tree=[]
 C.tree.push(this)
 this.to_js=function(){return 'float('+this.value+')'}}
-function $ForTarget(C){this.type='for_target'
-this.parent=C
-this.tree=[]
-C.tree.push(this)
-this.toString=function(){return 'for_target'+' '+this.tree}
-this.to_js=function(){return $to_js(this.tree)}}
 function $ForExpr(C){this.type='for'
 this.parent=C
 this.tree=[]
 C.tree.push(this)
 this.loop_num=$loop_num
+this.module=$get_scope(this).module
 $loop_num++
 this.toString=function(){return '(for) '+this.tree}
 this.transform=function(node,rank){var scope=$get_scope(this)
+var mod_name=scope.module
 var target=this.tree[0]
 var iterable=this.tree[1]
 var num=this.loop_num
 var $range=false
-if(iterable.type=='expr' &&
+if(target.tree.length==1 &&
+iterable.type=='expr' &&
 iterable.tree[0].type=='expr' &&
 iterable.tree[0].tree[0].type=='call'){var call=iterable.tree[0].tree[0]
 if(call.func.type=='id'){var func_name=call.func.value
@@ -1376,27 +1356,29 @@ var children=node.children
 var offset=1
 if($range && scope.ntype!='BRgenerator'){if(this.has_break){
 new_node=new $Node()
-var js='var $no_break'+num
-js +='=$globals["$no_break'+num+'"]=true'
+var js='$locals["$no_break'+num+'"]=true'
 new $NodeJSCtx(new_node,js)
 new_nodes.push(new_node)
 }
+var range_is_builtin=false
+if(!scope.blurred){var _scope=$get_scope(this),found=[]
+while(true){if($B.bound[_scope.id]['range']){found.push(_scope.id)}
+if(_scope.parent_block){_scope=_scope.parent_block}
+else{break}}
+range_is_builtin=found.length==1 && found[0]=="__builtins__"
+if(found==['__builtins__']){range_is_builtin=true}}
 var test_range_node=new $Node()
-new $NodeJSCtx(test_range_node,'if(range===__BRYTHON__.builtins.range)')
+if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(true)')
+}else{new $NodeJSCtx(test_range_node,'if('+call.func.to_js()+'===__BRYTHON__.builtins.range)')
+}
 new_nodes.push(test_range_node)
 var idt=target.to_js()
 if($range.tree.length==1){var start=0,stop=$range.tree[0].to_js()
 }else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()
 }
-var js='for(var '+idt+'='+start
-js +=';'+idt+'<('+stop+');'+idt+'++)'
+var js=idt+'=('+start+')-1;while('+idt+'++ < ('+stop+')-1)'
 var for_node=new $Node()
 new $NodeJSCtx(for_node,js)
-var idt_node=new $Node()
-if(scope.ntype=='module'){js='$globals'}
-else{js='$locals'}
-new $NodeJSCtx(idt_node,js+'["'+idt+'"]='+idt+';')
-for_node.add(idt_node)
 for(var i=0;i<children.length;i++){for_node.add(children[i].clone())
 }
 var in_loop=false
@@ -1406,36 +1388,34 @@ pnode=pnode.parent
 }}
 if(scope.ntype=='module' && !in_loop){var func_node=new $Node()
 func_node.for_wrapper=true
-js='function $f'+num+'($globals'
-if(this.has_break){js +=',$no_break'+num}
+js='function $f'+num+'('
+if(this.has_break){js +='$no_break'+num}
 js +=')'
 new $NodeJSCtx(func_node,js)
 test_range_node.add(func_node)
-var globals_node=new $Node()
-var js='for(var $var in $globals)'
-js +='{eval($var+"=$globals[$var]")}'
-new $NodeJSCtx(globals_node,js)
-func_node.add(globals_node)
 func_node.add(for_node)
-var ret_node=new $Node()
-if(this.has_break){js='return [$globals, $no_break'+num+']'
-}else{js='return [$globals]' 
+if(this.has_break){new_node=new $Node()
+new $NodeJSCtx(new_node,'return $no_break'+num)
+func_node.add(new_node)
 }
-new $NodeJSCtx(ret_node,js)
-func_node.add(ret_node)
 var end_func_node=new $Node()
-new $NodeJSCtx(end_func_node,'var $res'+num+'=$f'+num+'($globals)')
+new $NodeJSCtx(end_func_node,'var $res'+num+'=$f'+num+'($globals);')
 test_range_node.add(end_func_node)
-var reset_globals=new $Node()
-js='for(var $g'+num+' in $res'+num+'[0])' 
-js +='{eval($g'+num+'+"=$res'+num+'[0][$g'+num+']")}'
-new $NodeJSCtx(reset_globals,js)
-test_range_node.add(reset_globals)
 if(this.has_break){var no_break=new $Node()
-new $NodeJSCtx(no_break,'$no_break'+num+'=$res'+num+'[1]')
+new $NodeJSCtx(no_break,'$no_break'+num+'=$res'+num)
 test_range_node.add(no_break)
 }}else{
 test_range_node.add(for_node)
+}
+if(range_is_builtin){node.parent.children.splice(rank,1)
+var k=0
+if(this.has_break){node.parent.insert(rank,new_nodes[0])
+k++
+}
+for(var i=new_nodes[k].children.length-1;i>=0;i--){node.parent.insert(rank+k,new_nodes[k].children[i])
+}
+node.children=[]
+return 0
 }
 var else_node=new $Node()
 new $NodeJSCtx(else_node,'else')
@@ -1446,19 +1426,18 @@ this.test_range=true
 new_nodes=[]
 }
 var new_node=new $Node()
-var js='var $next'+num+'=$locals["$next'+num+'"]'
-js +='=getattr(iter('+iterable.to_js()+'),"__next__")\n'
+var js='$locals["$next'+num+'"]'
+js +='=getattr(iter('+iterable.to_js()+'),"__next__");\n'
 new $NodeJSCtx(new_node,js)
 new_nodes.push(new_node)
 if(this.has_break){
 new_node=new $Node()
-var js='var $no_break'+num
-js +='=$globals["$no_break'+num+'"]=true'
+var js='$locals["$no_break'+num+'"]=true'
 new $NodeJSCtx(new_node,js)
 new_nodes.push(new_node)
 }
 var while_node=new $Node()
-if(this.has_break){js='while($no_break'+num+')'}
+if(this.has_break){js='while($locals["$no_break'+num+'"])'}
 else{js='while(true)'}
 new $NodeJSCtx(while_node,js)
 while_node.C.loop_num=num 
@@ -1475,15 +1454,18 @@ var try_node=new $Node()
 new $NodeJSCtx(try_node,'try')
 while_node.add(try_node)
 var iter_node=new $Node()
+iter_node.parent=$get_node(this).parent
+iter_node.id=this.module
 var C=new $NodeCtx(iter_node)
 var target_expr=new $ExprCtx(C,'left',true)
 target_expr.tree=target.tree
 var assign=new $AssignCtx(target_expr)
-assign.tree[1]=new $JSCode('$next'+num+'()')
+assign.tree[1]=new $JSCode('$locals["$next'+num+'"]()')
 try_node.add(iter_node)
 var catch_node=new $Node()
 var js='catch($err){if(__BRYTHON__.is_exc($err,[StopIteration]))'
-js +='{__BRYTHON__.$pop_exc();break}'
+js +='{__BRYTHON__.$pop_exc();'
+js +='delete $locals["$next'+num+'"];break}'
 js +='else{throw($err)}}' 
 new $NodeJSCtx(catch_node,js)
 while_node.add(catch_node)
@@ -1502,6 +1484,14 @@ this.names=[]
 this.aliases={}
 C.tree.push(this)
 this.expect='module'
+this.scope=$get_scope(this)
+this.add_name=function(name){this.names.push(name)
+if(name=='*'){this.scope.blurred=true}}
+this.bind_names=function(){
+var scope=$get_scope(this)
+for(var i=0;i<this.names.length;i++){var name=this.aliases[i]||this.names[i]
+$B.bound[scope.id][name]=true
+}}
 this.toString=function(){var res='(from) '+this.module+' (import) '+this.names 
 return res + '(as)' + this.aliases
 }
@@ -1530,8 +1520,7 @@ if(mod_name.substr(0,2)=='$$'){mod_name=mod_name.substr(2)}
 var qname=package+'.'+mod_name
 res +='__BRYTHON__.$import("'+qname+'","'+parent_module+'");'
 var _sn=scope.ntype
-if('def'==_sn ||'class'==_sn ||'module'==_sn){
-res +='var '
+if('def'==_sn ||'class'==_sn ||'module'==_sn){res +='var '
 }
 var alias=this.aliases[this.names[i]]||this.names[i]
 res +=alias
@@ -1549,50 +1538,51 @@ res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
 if(scope.ntype==="module"){res +='=__BRYTHON__.vars["'+scope.module+'"]["'+"'+$attr+'"+'"]'
 }
 res +='=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}}'
+console.log(scope.id+' blurred')
+scope.blurred=true
 }else{
 switch(scope.ntype){case 'def':
 for(var i=0;i<this.names.length;i++){var alias=this.aliases[this.names[i]]||this.names[i]
-res+='var ' + alias + '=$locals["'+alias+'"]'
+res+='$locals["'+alias+'"]'
 res +='=getattr($mod,"'+this.names[i]+'")\n'
 }
 break
 case 'class':
 for(var i=0;i<this.names.length;i++){var name=this.names[i]
 var alias=this.aliases[name]||name
-res+='var ' + alias
+res+='$locals["' + alias+'"]'
 res +='=getattr($mod,"'+ name +'")\n'
 }
 break
 case 'module':
 for(var i=0;i<this.names.length;i++){var name=this.names[i]
 var alias=this.aliases[name]||name
-res+='var ' + alias + '=$globals["'+alias+'"]'
+res+='$globals["'+alias+'"]'
 res +='=getattr($mod,"'+ name +'")\n'
 }
 break
 default:
 for(var i=0;i<this.names.length;i++){var name=this.names[i]
 var alias=this.aliases[name]||name
-res +=alias + '=getattr($mod,"'+ names +'")\n'
+res +='$locals["'+alias +'"]=getattr($mod,"'+ names +'")\n'
 }}}}}else{if(this.names[0]=='*'){res +='__BRYTHON__.$import("'+this.module+'","'+mod+'")\n'
 res +=head+'var $mod=__BRYTHON__.imported["'+this.module+'"]\n'
 res +=head+'for(var $attr in $mod){\n'
-res +="if($attr.substr(0,1)!=='_')\n"+head+"{var $x = 'var '+$attr+'"
-if(scope.ntype==="module"){res +='=__BRYTHON__.vars["'+scope.module+'"]["'+"'+$attr+'"+'"]'
-}
-res +='=$mod["'+"'+$attr+'"+'"]'+"'"+'\n'+head+'eval($x)}}'
+res +="if($attr.substr(0,1)!=='_'){\n"+head 
+res +='__BRYTHON__.vars["'+scope.module+'"][$attr]'
+res +='=$mod[$attr]\n'+head+'}}'
+scope.blurred=true
 }else{res +='__BRYTHON__.$import_from("'+this.module+'",['
 res +='"' + this.names.join('","')+ '"'
 res +='],"'+mod+'");\n'
 var _is_module=scope.ntype==='module'
 for(var i=0;i<this.names.length;i++){var name=this.names[i]
 var alias=this.aliases[name]||name
-res +=head+'try{var '+ alias
-if(_is_module)res +='=$globals["' + alias + '"]'
+res +=head+'try{$locals["'+ alias+'"]'
 res +='=getattr(__BRYTHON__.imported["'+this.module+'"],"'+name+'")}\n'
 res +='catch($err'+$loop_num+'){if($err'+$loop_num+'.__class__'
-res +='===__BRYTHON__.builtins.AttributeError.$dict){$err'+$loop_num+'.__class__'
-res +='=__BRYTHON__.builtins.ImportError.$dict};throw $err'+$loop_num+'};'
+res +='===AttributeError.$dict){$err'+$loop_num+'.__class__'
+res +='=ImportError.$dict};throw $err'+$loop_num+'};'
 }}}
 return res + '\n'+head+'None;'
 }}
@@ -1611,7 +1601,10 @@ function $FuncArgIdCtx(C,name){
 this.type='func_arg_id'
 this.name=name
 this.parent=C
-this.parent.names.push(name)
+var node=$get_node(this)
+if($B.bound[node.id][name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])
+}
+$B.bound[node.id][name]='arg'
 this.tree=[]
 C.tree.push(this)
 var ctx=C
@@ -1626,11 +1619,15 @@ this.to_js=function(){return this.name+$to_js(this.tree)}}
 function $FuncStarArgCtx(C,op){this.type='func_star_arg'
 this.op=op
 this.parent=C
+this.node=$get_node(this)
 if(op=='*'){C.has_star_arg=true}
 else if(op=='**'){C.has_kw_arg=true}
 C.tree.push(this)
 this.set_name=function(name){this.name=name
 if(name=='$dummy'){return}
+if($B.bound[this.node.id][name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])
+}
+$B.bound[this.node.id][name]='arg'
 var ctx=C
 while(ctx.parent!==undefined){if(ctx.type==='def'){ctx.locals.push(name)
 break
@@ -1645,8 +1642,9 @@ C.tree.push(this)
 this.expect='id'
 this.toString=function(){return 'global '+this.tree}
 this.scope=$get_scope(this)
-if(this.scope.globals===undefined)this.scope.globals=[]
-this.add=function(name){if(this.scope.globals.indexOf(name)==-1)this.scope.globals.push(name)
+__BRYTHON__.globals=__BRYTHON__.globals ||{}
+__BRYTHON__.globals[this.scope.id]=__BRYTHON__.globals[this.scope.id]||{}
+this.add=function(name){__BRYTHON__.globals[this.scope.id][name]=true
 }
 this.to_js=function(){return ''}}
 function $check_unbound(assigned,scope,varname){
@@ -1676,6 +1674,9 @@ this.parent=C
 this.tree=[]
 C.tree.push(this)
 if(C.parent.type==='call_arg')this.call_arg=true
+this.scope=$get_scope(this)
+this.blurred_scope=this.scope.blurred
+this.env=clone($B.bound[this.scope.id])
 var ctx=C
 while(ctx.parent!==undefined){switch(ctx.type){case 'list_or_tuple':
 case 'dict_or_set':
@@ -1689,6 +1690,10 @@ else{ctx.locals.push(value)}}}
 ctx=ctx.parent
 }
 var scope=$get_scope(this)
+if(C.type=='target_list'){
+$B.bound[scope.id][value]=true
+this.bound=true
+}
 if(scope.ntype=='def' ||scope.ntype=='generator'){
 var _ctx=this.parent
 while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp())return
@@ -1720,9 +1725,7 @@ scope.var2node[value]=[this]
 }else{scope.var2node[value].push(this)
 }}}
 this.to_js=function(arg){var val=this.value
-switch(val){case 'print':
-case 'eval':
-case 'open':
+switch(val){case 'eval':
 val='$'+val
 break
 case 'locals':
@@ -1736,20 +1739,60 @@ if(i<locals.length-1)res+=','
 }
 new $StringCtx(this.parent,res+'}')
 }}}
-var scope=$get_scope(this)
-if(scope.ntype=='class' && this.in_class){
-return this.in_class
+if(val=='__BRYTHON__'){return val}
+var innermost=$get_scope(this)
+var scope=innermost,found=[],module=scope.module
+var gs=innermost
+while(gs.parent_block && gs.parent_block.id!=='__builtins__'){gs=gs.parent_block
 }
-if(scope.ntype==='class' && !this.is_left){
-var parent=this.parent
-while(parent){parent=parent.parent}
-if(this.parent.type==='expr' && this.parent.parent.type=='call_arg'){
-if(this.parent.parent.tree[0].type=='kwarg'){return val+$to_js(this.tree,'')
-}}
-return '($class["'+val+'"] !==undefined ? $class["'+val+'"] : '+val+')'
+while(true){if($B.bound[scope.id]===undefined){console.log('name '+val+' undef '+scope.id)}
+if($B.globals[scope.id]!==undefined &&
+$B.globals[scope.id][val]!==undefined){found=[gs]
+break
 }
-return val+$to_js(this.tree,'')
-}}
+if(scope===innermost){
+var bound_before=$get_node(this).bound_before
+if(bound_before && !this.bound){if(bound_before.indexOf(val)>-1){found.push(scope)}
+else if(scope.C &&
+scope.C.tree[0].type=='def' &&
+scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)
+}}else{if($B.bound[scope.id][val]){found.push(scope)}}}else{if($B.bound[scope.id][val]){found.push(scope)}}
+if(scope.parent_block){scope=scope.parent_block}
+else{break}}
+if(found.length>0){if(found.length>1 && found[0].C){if(found[0].C.tree[0].type=='class' && !this.bound){var bound_before=$get_node(this).bound_before,res
+if(bound_before){if(bound_before.indexOf(val)>-1){res='__BRYTHON__.vars["'+found[0].id+'"]'
+}else{res='__BRYTHON__.vars["'+found[1].id+'"]'
+}
+return res+'["'+val+'"]'
+}else{
+var res='__BRYTHON__.vars["'+found[0].id+'"]'
+res +='["'+val+'"]!==undefined ? '
+res +='__BRYTHON__.vars["'+found[0].id+'"]'
+res +='["'+val+'"] : '
+res +='__BRYTHON__.vars["'+found[1].id+'"]'
+res +='["'+val+'"]'
+return res
+}}}
+scope=found[0]
+if(scope.C===undefined){if(scope.id=='__builtins__'){if(gs.blurred){var val1='(__BRYTHON__.vars["'+gs.id+'"]["'+val+'"]'
+val1 +='|| __BRYTHON__.builtins["'+val+'"])'
+val=val1
+}else{val='__BRYTHON__.builtins["'+val+'"]'
+this.is_builtin=true
+}}else if(scope.id==scope.module){if(!this.bound && scope===innermost && this.env[val]===undefined){return '__BRYTHON__.$NameError("'+val+'")'
+}
+val='$globals["'+val+'"]'
+}
+else if(scope===innermost){val='$locals["'+val+'"]'}
+else{val='__BRYTHON__.vars["'+scope.id+'"]["'+val+'"]'}}else if(scope===innermost){if($B.globals[scope.id]&& $B.globals[scope.id][val]){val='$globals["'+val+'"]'}
+else{val='$locals["'+val+'"]'}}else{val='__BRYTHON__.vars["'+scope.id+'"]["'+val+'"]'
+}
+var res=val+$to_js(this.tree,'')
+return res
+}else{
+this.unknown_binding=true
+return '__BRYTHON__.$search("'+val+'","'+gs.id+'")'
+}}}
 function $ImaginaryCtx(C,value){this.type='imaginary'
 this.value=value
 this.toString=function(){return 'imaginary '+this.value}
@@ -1763,12 +1806,12 @@ this.parent=C
 this.tree=[]
 C.tree.push(this)
 this.expect='id'
-this.transform=function(node,rank){
+this.bind_names=function(){
 var scope=$get_scope(this)
-scope.bound=scope.bound ||[]
-for(var i=0;i<this.tree.length;i++){var name=this.tree[i].name
+for(var i=0;i<this.tree.length;i++){if(this.tree[i].name==this.tree[i].alias){var name=this.tree[i].name
 var parts=name.split('.')
-if(parts.length==1){if(scope.bound.indexOf(name)==-1){scope.bound.push(name)}}}}
+if(parts.length==1){$B.bound[scope.id][name]=true}}else{$B.bound[scope.id][this.tree[i].alias]=true
+}}}
 this.to_js=function(){var scope=$get_scope(this)
 var mod=$get_module(this).module
 if(mod.substr(0,13)==='__main__,exec'){mod='__main__'}
@@ -1778,16 +1821,18 @@ elts.pop()
 path=elts.join('/')
 var res=''
 for(var i=0;i<this.tree.length;i++){res +='__BRYTHON__.$import('+this.tree[i].to_js()+',"'+mod+'");'
-var parts=this.tree[i].name.split('.')
+if(this.tree[i].name==this.tree[i].alias){var parts=this.tree[i].name.split('.')
 for(var j=0;j<parts.length;j++){var key=parts.slice(0,j+1).join('.')
 var alias=key
-if(j==parts.length-1){alias=this.tree[i].alias}
+if(j==parts.length-1){alias=this.tree[i].alias ||alias}
 if(alias.search(/\./)==-1){res +='var '}
 res +=alias
 if(j==0){if(scope.is_function){res +='=$locals["'+alias+'"]'
 }else if(scope.ntype==="module"){res +='=$globals["'+alias+'"]'
 }}
 res +='=__BRYTHON__.vars["'+key+'"];'
+}}else{res +='$locals["'+this.tree[i].alias
+res +='"]=__BRYTHON__.vars["'+this.tree[i].name+'"];'
 }}
 return res + 'None;'
 }}
@@ -1832,7 +1877,7 @@ break
 }}
 scope.var2node[varname].splice(ix,1)
 }}
-this.to_js=function(){var key=this.tree[0].to_js()
+this.to_js=function(){var key=this.tree[0].value
 if(key.substr(0,2)=='$$'){key=key.substr(2)}
 var res='{$nat:"kw",name:"'+key+'",'
 res +='value:'+$to_js(this.tree.slice(1,this.tree.length))+'}'
@@ -1847,12 +1892,15 @@ this.args_start=$pos+6
 this.vars=[]
 this.locals=[]
 this.to_js=function(){var module=$get_module(this).module
+var scope=$get_scope(this)
 var src=$B.$py_src[module]
 var qesc=new RegExp('"',"g")
 var args=src.substring(this.args_start,this.body_start).replace(qesc,'\\"')
 var body=src.substring(this.body_start+1,this.body_end).replace(qesc,'\\"')
 body=body.replace(/\n/g,' ')
-return '__BRYTHON__.$lambda("'+module+'",$globals,$locals,"'+args+'","'+body+'")'
+var res='__BRYTHON__.$lambda($locals,"'+scope.module+'","'
+res +=scope.id+'","'+args+'","'+body+'")'
+return res
 }}
 function $ListOrTupleCtx(C,real){
 this.type='list_or_tuple'
@@ -1878,34 +1926,56 @@ return true
 }
 return false
 }
-this.get_src=function(){var module=$get_module(this).module
-return $B.$py_src[module]
+this.get_src=function(){
+var scope=$get_scope(this)
+var ident=scope.id
+while($B.$py_src[ident]===undefined && $B.modules[ident].parent_block){ident=$B.modules[ident].parent_block.id
 }
-this.to_js=function(){switch(this.real){case 'list':
+if($B.$py_src[ident]===undefined){
+return $B.$py_src[scope.module]
+}
+return $B.$py_src[ident]
+}
+this.to_js=function(){var scope=$get_scope(this)
+switch(this.real){case 'list':
 return 'list(['+$to_js(this.tree)+'])'
 case 'list_comp':
 case 'gen_expr':
 case 'dict_or_set_comp':
 var src=this.get_src()
-var res='__BRYTHON__.$mkdict($globals,$locals),'
+var res1='__BRYTHON__.$mkdict($globals,$locals)'
+var res2=''
 var qesc=new RegExp('"',"g")
 for(var i=1;i<this.intervals.length;i++){var txt=src.substring(this.intervals[i-1],this.intervals[i])
 var lines=txt.split('\n')
-res +='['
+res2 +='['
 for(var j=0;j<lines.length;j++){var txt=lines[j]
 if(txt.replace(/ /g,'').length==0){continue}
 txt=txt.replace(/\n/g,' ')
 txt=txt.replace(/\\/g,'\\\\')
 txt=txt.replace(qesc,'\\"')
-res +='"'+txt+'",'
+res2 +='"'+txt+'",'
 }
-res +=']'
-if(i<this.intervals.length-1){res+=','}}
-if(this.real==='list_comp')return '__BRYTHON__.$list_comp('+res+')'
-if(this.real==='dict_or_set_comp'){if(this.expression.length===1)return '__BRYTHON__.$gen_expr('+res+')'
-return '__BRYTHON__.$dict_comp('+res+')'
+res2 +=']'
+if(i<this.intervals.length-1){res2+=','}}
+if(this.real==='list_comp'){res1='"'+scope.id+'"'
+var res='__BRYTHON__.$list_comp("'+scope.module+'",'
+res +='$locals_id,'+res2+')'
+return res
 }
-return '__BRYTHON__.$gen_expr('+res+')'
+if(this.real==='dict_or_set_comp'){res1='"'+scope.id+'"'
+var res=res1+','+res2
+if(this.expression.length===1){var res='__BRYTHON__.$gen_expr("'+scope.module+'",'
+res +='"'+scope.id+'",'+res2+')'
+return res
+}
+var res='__BRYTHON__.$dict_comp("'+scope.module+'",'
+res +='"'+scope.id+'",'+res2+')'
+return res
+}
+var res='__BRYTHON__.$gen_expr("'+scope.module+'",'
+res +='"'+scope.id+'",'+res2+')'
+return res
 case 'tuple':
 if(this.tree.length===1 && this.has_comma===undefined)return this.tree[0].to_js()
 return 'tuple(['+$to_js(this.tree)+'])'
@@ -1914,6 +1984,16 @@ function $NodeCtx(node){this.node=node
 node.C=this
 this.tree=[]
 this.type='node'
+var scope=null
+var tree_node=node
+while(tree_node.parent && tree_node.parent.type!=='module'){var ntype=tree_node.parent.C.tree[0].type
+if(['def','class','BRgenerator'].indexOf(ntype)>-1){scope=tree_node.parent
+break
+}
+tree_node=tree_node.parent
+}
+if(scope==null){scope=tree_node.parent ||tree_node 
+}
 this.toString=function(){return 'node '+this.tree}
 this.to_js=function(){if(this.tree.length>1){var new_node=new $Node()
 var ctx=new $NodeCtx(new_node)
@@ -1940,8 +2020,15 @@ C.tree.push(this)
 this.expect='id'
 this.toString=function(){return 'global '+this.tree}
 this.scope=$get_scope(this)
-if(this.scope.globals===undefined){this.scope.globals=[]}
-this.add=function(name){if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}}
+if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])
+}
+this.add=function(name){if($B.bound[this.scope.id][name]=='arg'){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])
+}
+var pscope=this.scope.parent_block
+if(pscope.C===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+}else if($B.bound[pscope.id][name]===undefined){$_SyntaxError(C,["no binding for nonlocal '"+name+"' found"])
+}
+if(this.scope.globals.indexOf(name)==-1){this.scope.globals.push(name)}}
 this.to_js=function(){return ''}}
 function $NotCtx(C){this.type='not'
 this.parent=C
@@ -1961,7 +2048,7 @@ this.to_js=function(){var comps={'==':'eq','!=':'ne','>=':'ge','<=':'le','<':'lt
 if(comps[this.op]!==undefined){var method=comps[this.op]
 if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0]
 if(t1.type=='int'){if(t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='str'){return 'false'}
+else if(t0.type=='str'){return '__BRYTHON__.$TypeError("unorderable types: int() < str()")'}
 else if(t0.type=='id'){var res='typeof '+t0.to_js()+'=="number" ? '
 res +=t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
@@ -1969,14 +2056,13 @@ res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
 }}
 else if(t1.type=='str'){if(t0.type=='str'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='int'){return 'false'}
+else if(t0.type=='int'){return '__BRYTHON__.$TypeError("unorderable types: str() < int()")'}
 else if(t0.type=='id'){var res='typeof '+t0.to_js()+'=="string" ? '
 res +=t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
 res +=',"__'+method+'__")('+this.tree[1].to_js()+')'
 return res
-}}else if(t1.type=='id'){if(t0.type=='str'||t0.type=='int'){return t0.to_js()+this.op+t1.to_js()}
-else if(t0.type=='id'){var res='typeof '+t0.to_js()+'!="object" && '
+}}else if(t1.type=='id'){if(t0.type=='id'){var res='typeof '+t0.to_js()+'!="object" && '
 res +='typeof '+t0.to_js()+'==typeof '+t1.to_js()
 res +=' ? '+t0.to_js()+this.op+t1.to_js()+' : '
 res +='getattr('+this.tree[0].to_js()
@@ -2023,7 +2109,7 @@ return true
 && elt.tree[0].real=='tuple'
 && elt.tree[0].tree.length==1 
 && elt.tree[0].tree[0].type=='expr'){return is_simple(elt.tree[0].tree[0].tree[0])
-}else if(elt.type=='expr' && elt.tree[0].type=='id'){var _var=elt.tree[0].value
+}else if(elt.type=='expr' && elt.tree[0].type=='id'){var _var=elt.tree[0].to_js()
 if(vars.indexOf(_var)==-1){vars.push(_var)}
 return true
 }else if(elt.type=='op' &&['*','+','-'].indexOf(elt.op)>-1){for(var i=0;i<elt.tree.length;i++){if(!is_simple(elt.tree[i])){return false}}
@@ -2065,7 +2151,7 @@ else if(elt.type=='expr' && elt.tree[0].type=='list_or_tuple'
 && elt.tree[0].real=='tuple'
 && elt.tree[0].tree.length==1 
 && elt.tree[0].tree[0].type=='expr'){return '('+elt.tree[0].tree[0].tree[0].simple_js()+')'
-}else{return elt.tree[0].value}}
+}else{return elt.tree[0].to_js()}}
 return sjs(this.tree[0])+op+sjs(this.tree[1])
 }}
 function $PackedCtx(C){
@@ -2095,8 +2181,8 @@ var exc=this.tree[0]
 if(exc.type==='id' ||
 (exc.type==='expr' && exc.tree[0].type==='id')){var value=exc.value
 if(exc.type=='expr'){value=exc.tree[0].value}
-var res='if(isinstance('+value+',type)){throw '+value+'()}'
-return res + 'else{throw '+value+'}'
+var res='if(isinstance('+exc.to_js()+',type)){throw '+exc.to_js()+'()}'
+return res + 'else{throw '+exc.to_js()+'}'
 }
 while(this.tree.length>1)this.tree.pop()
 return 'throw '+$to_js(this.tree)
@@ -2145,8 +2231,8 @@ if(elt.type=='for' ||
 this.loop_num=elt.loop_num
 }}}
 this.toString=function(){return this.token}
-this.to_js=function(){if(this.token==='finally')return this.token
-if(this.loop_num!==undefined){return 'if($no_break'+this.loop_num+')'}
+this.to_js=function(){if(this.token=='finally')return this.token
+if(this.loop_num!==undefined){return 'if($locals["$no_break'+this.loop_num+'"])'}
 return this.token
 }}
 function $StarArgCtx(C){this.type='star_arg'
@@ -2238,17 +2324,10 @@ C.parent.tree.push(this)
 C.parent=this
 this.tree=[C]
 this.toString=function(){return '(ternary) '+this.tree}
-this.to_js=function(){
-var env='{"$globals":$globals,"$locals":$locals,'
-var ids=$get_ids(this)
-for(var i=0;i<ids.length;i++){env +='"'+ids[i]+'":'+ids[i]
-if(i<ids.length-1){env+=','}}
-env+='}'
-var qesc=new RegExp('"',"g")
-var args='"'+this.tree[1].to_js().replace(qesc,'\\"')+'","' 
-args +=escape(this.tree[0].to_js())+'","' 
-args +=escape(this.tree[2].to_js())
-return '__BRYTHON__.$ternary('+env+','+args+'")'
+this.to_js=function(){var res='bool('+this.tree[1].to_js()+') ? ' 
+res +=this.tree[0].to_js()+' : ' 
+res +=this.tree[2].to_js()
+return res
 }}
 function $TryCtx(C){this.type='try'
 this.parent=C
@@ -2330,7 +2409,7 @@ this.parent=C
 C.tree.push(this)
 this.tree=[]
 this.expect='as'
-this.toString=function(){return '(with) '}
+this.toString=function(){return '(with) '+this.tree}
 this.set_alias=function(arg){var scope=$get_scope(this)
 this.tree[this.tree.length-1].alias=arg
 if(scope.ntype !=='module'){
@@ -2338,6 +2417,19 @@ scope.C.tree[0].locals.push(arg)
 }}
 this.transform=function(node,rank){if(this.transformed)return 
 if(this.tree[0].alias===null){this.tree[0].alias='$temp'}
+if(this.tree[0].type=='expr' && 
+this.tree[0].tree[0].type=='list_or_tuple'){if(this.tree[1].type!='expr' ||
+this.tree[1].tree[0].type!='list_or_tuple'){$_SyntaxError(C)
+}
+if(this.tree[0].tree[0].tree.length!=this.tree[1].tree[0].tree.length){$_SyntaxError(C,['wrong number of alias'])
+}
+var ids=this.tree[0].tree[0].tree
+var alias=this.tree[1].tree[0].tree
+this.tree.shift()
+this.tree.shift()
+for(var i=ids.length-1;i>=0;i--){ids[i].alias=alias[i].value
+this.tree.splice(0,0,ids[i])
+}}
 var new_node=new $Node()
 new $NodeJSCtx(new_node,'catch($err'+$loop_num+')')
 var fbody=new $Node()
@@ -2354,6 +2446,15 @@ var fbody=new $Node()
 new $NodeJSCtx(fbody,'$ctx_manager_exit(None,None,None)')
 new_node.add(fbody)
 node.parent.insert(rank+2,new_node)
+if(this.tree.length>1){var nw=new $Node()
+var ctx=new $NodeCtx(nw)
+nw.parent=node
+var wc=new $WithCtx(ctx)
+wc.tree=this.tree.slice(1)
+for(var i=0;i<node.children.length;i++){nw.add(node.children[i])
+}
+node.children=[nw]
+}
 this.transformed=true
 }
 this.to_js=function(){var res='var $ctx_manager='+this.tree[0].to_js()
@@ -2428,6 +2529,9 @@ function $add_line_num(node,rank){if(node.type==='module'){var i=0
 while(i<node.children.length){i +=$add_line_num(node.children[i],i)
 }}else{var elt=node.C.tree[0],offset=1
 var flag=true
+var pnode=node
+while(pnode.parent!==undefined){pnode=pnode.parent}
+var mod_id=pnode.id
 if(node.line_num===undefined){flag=false}
 if(node.module===undefined){var nd=node.parent
 while(nd){if(nd.module!==undefined){node.module=nd.module
@@ -2441,7 +2545,7 @@ if(elt.type==='condition' && elt.token==='elif'){flag=false}
 else if(elt.type==='except'){flag=false}
 else if(elt.type==='single_kw'){flag=false}
 if(flag){
-var js='__BRYTHON__.line_info=new Array('+node.line_num+',"'+node.module+'");None;'
+var js='__BRYTHON__.line_info=new Array('+node.line_num+',"'+mod_id+'");None;'
 if(node.module===undefined)console.log('tiens, module undef !')
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
@@ -2644,6 +2748,7 @@ if(token==='eol')return $transition(C.parent,'eol')
 $_SyntaxError(C,token)
 case 'call':
 switch(token){case ',':
+if(C.expect=='id'){$_SyntaxError(C,token)}
 return C
 case 'id':
 case 'imaginary':
@@ -2657,11 +2762,13 @@ case '{':
 case 'not':
 case 'lambda':
 if(C.has_dstar)$_SyntaxError(C,token)
+C.expect=','
 return $transition(new $CallArgCtx(C),token,arguments[2])
 case ')':
 C.end=$pos
 return C.parent
 case 'op':
+C.expect=','
 switch(arguments[2]){case '-':
 case '~':
 return new $UnaryCtx(new $ExprCtx(C,'unary',false),arguments[2])
@@ -2738,7 +2845,7 @@ if(C.expect===','){return new $CallArgCtx(C.parent)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'class':
 switch(token){case 'id':
-if(C.expect==='id'){C.name=arguments[2]
+if(C.expect==='id'){C.set_name(arguments[2])
 C.expect='(:'
 return C
 }
@@ -2770,6 +2877,9 @@ return new $TargetListCtx(new $CompForCtx(C))
 return $transition(C.parent,token,arguments[2])
 case 'condition':
 if(token===':')return $BodyCtx(C)
+$_SyntaxError(C,'token '+token+' after '+C)
+case 'continue':
+if(token=='eol')return C.parent
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'decorator':
 if(token==='id' && C.tree.length===0){return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
@@ -2815,8 +2925,7 @@ C.tree=[]
 C.closed=true
 return C
 case 'dict':
-if(C.tree.length%2===0){
-C.items=C.tree
+if(C.tree.length%2===0){C.items=C.tree
 C.tree=[]
 C.closed=true
 return C
@@ -2933,7 +3042,7 @@ return C
 }
 case 'id':
 if(C.expect==='alias'){C.expect=':'
-C.tree[0].alias=arguments[2]
+C.set_alias(arguments[2])
 return C
 }
 break
@@ -3036,11 +3145,13 @@ case '!=':
 case 'is':
 case '>=':
 case '>':
-repl.parent.tree.pop()
-var and_expr=new $OpCtx(repl,'and')
 var c2=repl.tree[1]
 var c2_clone=new Object()
 for(var attr in c2){c2_clone[attr]=c2[attr]}
+while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<$op_weight[repl.op]){repl=repl.parent
+}else{break}}
+repl.parent.tree.pop()
+var and_expr=new $OpCtx(repl,'and')
 c2_clone.parent=and_expr
 and_expr.tree.push('xxx')
 var new_op=new $OpCtx(c2_clone,op)
@@ -3090,7 +3201,7 @@ return $BodyCtx(C)
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'from':
 switch(token){case 'id':
-if(C.expect==='id'){C.names.push(arguments[2])
+if(C.expect==='id'){C.add_name(arguments[2])
 C.expect=','
 return C
 }
@@ -3111,7 +3222,7 @@ case 'op':
 if(arguments[2]==='*' && C.expect==='id' 
 && C.names.length===0){if($get_scope(C).ntype!=='module'){$_SyntaxError(C,["import * only allowed at module level"])
 }
-C.names.push('*')
+C.add_name('*')
 C.expect='eol'
 return C
 }
@@ -3122,6 +3233,7 @@ return C
 case 'eol':
 switch(C.expect){case ',':
 case 'eol':
+C.bind_names()
 return $transition(C.parent,token)
 }
 case 'as':
@@ -3243,7 +3355,6 @@ return C
 }
 if(C.expect==='alias'){C.expect=','
 C.tree[C.tree.length-1].alias=arguments[2]
-var mod_name=C.tree[C.tree.length-1].name
 return C
 }
 break
@@ -3263,7 +3374,8 @@ return C
 }
 break
 case 'eol':
-if(C.expect===','){return $transition(C.parent,token)
+if(C.expect===','){C.bind_names()
+return $transition(C.parent,token)
 }
 break
 }
@@ -3414,6 +3526,8 @@ return $transition(expr,token,arguments[2])
 break
 case 'class':
 return new $ClassCtx(C)
+case 'continue':
+return new $ContinueCtx(C)
 case 'break':
 return new $BreakCtx(C)
 case 'def':
@@ -3492,7 +3606,7 @@ return $transition(C.parent,token)
 case 'op':
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])
 }
-if(C.op.substr(0,5)=='unary'){if(C.parent.type=='assign'){
+if(C.op.substr(0,5)=='unary'){if(C.parent.type=='assign' ||C.parent.type=='return'){
 C.parent.tree.pop()
 var t=new $ListOrTupleCtx(C.parent,'tuple')
 t.tree.push(C)
@@ -3660,9 +3774,8 @@ return C
 return $transition(C.parent,token,arguments[2])
 case 'with':
 switch(token){case 'id':
-if(C.expect==='id'){new $TargetCtx(C,arguments[2])
-C.expect='as'
-return C
+if(C.expect==='id'){C.expect='as'
+return $transition(new $AbstractExprCtx(C,false),token,arguments[2])
 }
 if(C.expect==='alias'){if(C.parenth!==undefined){C.expect=','}
 else{C.expect=':'}
@@ -3671,9 +3784,7 @@ return C
 }
 break
 case 'as':
-if(C.expect==='as'
-&& C.has_alias===undefined 
-&& C.tree.length===1){
+if(C.expect==='as'){
 C.expect='alias'
 C.has_alias=true
 return C
@@ -3689,6 +3800,8 @@ break
 case '(':
 if(C.expect==='id' && C.tree.length===0){C.parenth=true
 return C
+}else if(C.expect=='alias'){C.expect=':'
+return $transition(new $AbstractExprCtx(C,false),token)
 }
 break
 case ')':
@@ -3699,6 +3812,8 @@ break
 case ',':
 if(C.parenth!==undefined && C.has_alias===undefined &&
 (C.expect==',' ||C.expect=='as')){C.expect='id'
+return C
+}else if(C.expect==':'){C.expect='id'
 return C
 }
 break
@@ -3716,13 +3831,13 @@ return new $AbstractExprCtx(C,true)
 return $transition(C.parent,token)
 }
 }
-$B.forbidden=['alert','case','catch','constructor','Date','delete','default','document','Error','history','function','location','Math','new','null','Number','RegExp','this','throw','var','super','window']
-function $tokenize(src,module,parent){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
+$B.forbidden=['super','case','catch','constructor','Date','delete','default','Error','history','function','location','Math','new','null','Number','RegExp','this','var']
+function $tokenize(src,module,locals_id,parent_block_id,line_info){var delimiters=[["#","\n","comment"],['"""','"""',"triple_string"],["'","'","string"],['"','"',"string"],["r'","'","raw_string"],['r"','"',"raw_string"]]
 var br_open={"(":0,"[":0,"{":0}
 var br_close={")":"(","]":"[","}":"{"}
 var br_stack=""
 var br_pos=new Array()
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","not","pass","with","bryield" 
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","not","pass","with","continue"
 ]
 var unsupported=[]
 var $indented=['class','def','for','condition','single_kw','try','except','with']
@@ -3739,8 +3854,12 @@ var sqesc=new RegExp("'","g")
 var C=null
 var root=new $Node('module')
 root.module=module
-root.parent=parent
+root.id=locals_id
+$B.modules[root.id]=root
+root.parent_block=$B.modules[parent_block_id]
+root.line_info=line_info
 root.indent=-1
+if(locals_id!==module){$B.bound[locals_id]={}}
 var new_node=new $Node()
 var current=root
 var name=""
@@ -3880,8 +3999,7 @@ C=$transition(C,'id',name)
 name=""
 continue
 }}
-if(car=="."){
-if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
+if(car=="."){if(pos<src.length-1 && /^\d$/.test(src.charAt(pos+1))){
 var j=pos+1
 while(j<src.length && src.charAt(j).search(/\d/)>-1){j++}
 C=$transition(C,'float','0'+src.substr(pos,j-pos))
@@ -4013,46 +4131,51 @@ $_SyntaxError(C,'expected an indented block',pos)
 }
 return root
 }
-$B.py2js=function(src,module,parent){
+$B.py2js=function(src,module,locals_id,parent_block_id,line_info){
 var t0=new Date().getTime()
 var src=src.replace(/\r\n/gm,'\n')
 var $n=0
 var _src=src.charAt(0)
 var _src_length=src.length
-while(_src_length>$n &&(_src=="\n" ||_src=="\r")){
-$n++
+while(_src_length>$n &&(_src=="\n" ||_src=="\r")){$n++
 _src=src.charAt($n)
 }
 src=src.substr($n)
 if(src.charAt(src.length-1)!="\n"){src+='\n'}
 if(module===undefined){module='__main__'}
-var __name__=module
+if(locals_id===undefined){locals_id=module}
 $B.vars[module]=$B.vars[module]||{}
-$B.$py_src[module]=src
-var root=$tokenize(src,module,parent)
+$B.bound[module]=$B.bound[module]||{}
+$B.vars[locals_id]=$B.vars[locals_id]||{}
+$B.bound[module]['__doc__']=true
+$B.bound[module]['__name__']=true
+$B.bound[module]['__file__']=true
+$B.$py_src[locals_id]=src
+var root=$tokenize(src,module,locals_id,parent_block_id,line_info)
 root.transform()
 var js='var $B=__BRYTHON__\n'
-js +='var __builtins__ = $B.builtins, _b_=$B.builtins\n'
-js +='var $globals = $B.vars["'+module+'"]\nvar $locals = $globals\n'
+var js='var __builtins__ = _b_ = __BRYTHON__.builtins\n'
+js +='var $globals = __BRYTHON__.vars["'+module+'"];\n'
+js +='var $locals_id = "'+locals_id+'";\n'
+js +='var $locals = __BRYTHON__.vars["'+locals_id+'"];\n'
 js +='var $s=[];\n'
 js +='for(var $b in _b_) $s.push(\'var \' + $b +\'=_b_["\'+$b+\'"]\');\n'
-js +='eval($s.join(";"))'
+js +='eval($s.join(";"))\n'
 var new_node=new $Node()
 new $NodeJSCtx(new_node,js)
 root.insert(0,new_node)
 var ds_node=new $Node()
-new $NodeJSCtx(ds_node,'var __doc__=$globals["__doc__"]='+root.doc_string)
+new $NodeJSCtx(ds_node,'$locals["__doc__"]='+root.doc_string)
 root.insert(1,ds_node)
 var name_node=new $Node()
 var lib_module=module
 if(module.substr(0,9)=='__main__,'){lib_module='__main__'}
-new $NodeJSCtx(name_node,'var __name__=$globals["__name__"]="'+lib_module+'"')
+new $NodeJSCtx(name_node,'$locals["__name__"]="'+locals_id+'"')
 root.insert(2,name_node)
 var file_node=new $Node()
-new $NodeJSCtx(file_node,'var __file__=$globals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";')
+new $NodeJSCtx(file_node,'$locals["__file__"]="'+__BRYTHON__.$py_module_path[module]+'";None;\n')
 root.insert(3,file_node)
 if($B.debug>0){$add_line_num(root,null,module)}
-$B.modules[module]=root
 if($B.debug>=2){var t1=new Date().getTime()
 console.log('module '+module+' translated in '+(t1 - t0)+' ms')
 }
@@ -4062,10 +4185,9 @@ function brython(options){var _b_=$B.builtins
 $B.$py_src={}
 $B.$py_module_path={}
 $B.meta_path=[]
-$B.modules={}
-$B.imported={__main__:{__class__:$B.$ModuleDict,__name__:'__main__'}}
 $B.$options={}
 $B.$py_next_hash=-Math.pow(2,53)
+$B.lambda_magic=Math.random().toString(36).substr(2,8)
 $B.callbacks={}
 if(options===undefined)options={'debug':0}
 if(typeof options==='number')options={'debug':options}
@@ -4073,13 +4195,12 @@ $B.debug=options.debug
 _b_.__debug__=$B.debug>0
 if(options.static_stdlib_import===undefined){options.static_stdlib_import=true}
 $B.static_stdlib_import=options.static_stdlib_import
-if(options.open !==undefined)_b_.$open=options.open
+if(options.open !==undefined)_b_.open=options.open
 $B.$CORS=false 
 if(options.CORS !==undefined)$B.$CORS=options.CORS
 $B.$options=options
 $B.exception_stack=[]
 $B.call_stack=[]
-$B.vars={}
 if(options.ipy_id!==undefined){var $elts=[]
 for(var $i=0;$i<options.ipy_id.length;$i++){$elts.push(document.getElementById(options.ipy_id[$i]))
 }}else{var $elts=document.getElementsByTagName('script')
@@ -4136,7 +4257,7 @@ var $src=($elt.innerHTML ||$elt.textContent)
 $B.$py_module_path['__main__']=$href
 }
 try{
-var $root=$B.py2js($src,'__main__')
+var $root=$B.py2js($src,'__main__','__main__','__builtins__')
 var $js=$root.to_js()
 if($B.debug>1)console.log($js)
 eval($js)
@@ -4195,7 +4316,7 @@ for(var i=0;i<objects.length;i++){for(var attr in objects[i]){
 if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue
 }
-res.push({__class__:$B.$AttrDict,name:attr})
+res.push(attr)
 }}
 res=_b_.list(_b_.set(res))
 _b_.list.$dict.sort(res)
@@ -4262,7 +4383,7 @@ if(x===undefined)return _b_.None
 return x
 }})(args)
 method.__class__=$B.$InstanceMethodDict
-method.__eq__=function(other){return other.__func__===__func__
+method.__eq__=function(other){return other.$res===res
 }
 method.__func__=__func__
 method.__repr__=__repr__
@@ -4271,6 +4392,7 @@ method.__str__=__str__
 method.__code__={'__class__' : $B.CodeDict}
 method.__doc__=res.__doc__ ||''
 method.$type='instancemethod'
+method.$res=res
 return method
 }else{
 return res1
@@ -4328,7 +4450,6 @@ self[attr]=val
 }
 $ObjectDict.__setattr__.__str__=function(){return 'method object.setattr'}
 $ObjectDict.__str__=$ObjectDict.__repr__
-$ObjectDict.toString=$ObjectDict.__repr__ 
 function object(){return{__class__:$ObjectDict}}
 object.$dict=$ObjectDict
 $ObjectDict.$factory=object
@@ -4354,8 +4475,8 @@ for(var i=0;i<parents.length;i++){if(parents[i].$dict.__class__!==$B.$type){meta
 break
 }}}
 if(metaclass===_b_.type)return _b_.type(class_name,bases,cl_dict)
-var factory=(function(_class){return function(){return $instance_creator(_class).apply(null,arguments)
-}})($B.class_dict)
+var factory=function(){return $instance_creator($B.class_dict).apply(null,arguments)
+}
 var new_func=_b_.getattr(metaclass,'__new__')
 var factory=_b_.getattr(metaclass,'__new__').apply(null,[factory,class_name,bases,cl_dict])
 _b_.getattr(metaclass,'__init__').apply(null,[factory,class_name,bases,cl_dict])
@@ -4510,9 +4631,7 @@ method.__code__={'__class__': $B.CodeDict}
 method.__doc__=res.__doc__ ||''
 method.im_class=klass
 return method
-}
-}else{
-}}
+}}}
 function $instance_creator(klass){
 return function(){var new_func=null,init_func=null,obj
 if(klass.__bases__.length==1 && klass.__new__==undefined){obj={__class__:klass}}else{try{new_func=_b_.getattr(klass,'__new__')
@@ -4622,8 +4741,7 @@ case 'boolean':
 return $B.$BoolDict
 case 'object':
 if(obj.constructor===Array)return _b_.list.$dict
-}
-}
+}}
 return klass
 }
 $B.$mkdict=function(glob,loc){var res={}
@@ -4631,55 +4749,45 @@ for(var arg in glob)res[arg]=glob[arg]
 for(var arg in loc)res[arg]=loc[arg]
 return res
 }
-$B.$list_comp=function(){var $env=arguments[0]
-var _stmts=[]
-for(var $arg in $env)_stmts.push("var "+$arg+'=$env["'+$arg+'"]')
-eval(_stmts.join(';'))
-var $ix=Math.random().toString(36).substr(2,8)
+$B.$list_comp=function(module_name,parent_block_id){var $ix=Math.random().toString(36).substr(2,8)
 var $py='def func'+$ix+"():\n"
 $py +="    x"+$ix+"=[]\n"
 var indent=4
-for(var $i=2;$i<arguments.length;$i++){$py +=' '.repeat(indent)
+for(var $i=3;$i<arguments.length;$i++){$py +=' '.repeat(indent)
 $py +=arguments[$i]+':\n'
 indent +=4
 }
 $py +=' '.repeat(indent)
-$py +='x'+$ix+'.append('+arguments[1].join('\n')+')\n'
+$py +='x'+$ix+'.append('+arguments[2].join('\n')+')\n'
 $py +="    return x"+$ix+"\n"
 $py +="res"+$ix+"=func"+$ix+"()"
 var $mod_name='lc'+$ix
-var $root=$B.py2js($py,$mod_name,$B.line_info)
+var $root=$B.py2js($py,module_name,$mod_name,parent_block_id,$B.line_info)
 $root.caller=$B.line_info
 var $js=$root.to_js()
-$B.vars[$mod_name]=$env
-try{eval($js)
-}catch(err){throw $B.exception(err)}
-return eval("res"+$ix)
+try{eval($js)}
+catch(err){throw $B.exception(err)}
+return __BRYTHON__.vars['lc'+$ix]['res'+$ix]
 }
 $B.$gen_expr=function(){
-var $env=arguments[0]
-for(var $arg in $env){try{if($arg.search(/\./)>-1){
-eval($arg+'=$env["'+$arg+'"]')
-}else{eval("var "+$arg+'=$env["'+$arg+'"]')
-}}catch(err){throw err
-}}
+var module_name=arguments[0]
+var parent_block_id=arguments[1]
 var $ix=Math.random().toString(36).substr(2,8)
 var $res='res'+$ix
 var $py=$res+"=[]\n"
 var indent=0
-for(var $i=2;$i<arguments.length;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
-$py +=arguments[$i]+':\n'
+for(var $i=3;$i<arguments.length;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
+$py +=arguments[$i].join(' ')+':\n'
 indent +=4
 }
 for(var $j=0;$j<indent;$j++)$py +=' '
-$py +=$res+'.append('+arguments[1].join('\n')+')'
+$py +=$res+'.append('+arguments[2].join('\n')+')'
 var $mod_name='ge'+$ix
-var $root=$B.py2js($py,$mod_name,$B.line_info)
-$root.caller=$B.line_info
+$B.vars[$mod_name]={}
+var $root=$B.py2js($py,module_name,$mod_name,parent_block_id,$B.line_info)
 var $js=$root.to_js()
-$B.vars[$mod_name]=$env
 eval($js)
-var $res1=eval($res)
+var $res1=__BRYTHON__.vars["ge"+$ix]["res"+$ix]
 var $GenExprDict={__class__:$B.$type,__name__:'generator',toString:function(){return '(generator)'}}
 $GenExprDict.__mro__=[$GenExprDict,_b_.object.$dict]
 $GenExprDict.__iter__=function(self){return self}
@@ -4696,51 +4804,41 @@ var $res2={value:$res1,__class__:$GenExprDict,$counter:-1}
 $res2.toString=function(){return 'ge object'}
 return $res2
 }
-$B.$dict_comp=function(){
-var $env=arguments[0]
-var _stmts=[]
-for(var $arg in $env)_stmts.push("var "+$arg+'=$env["'+$arg+'"]')
-eval(_stmts.join(';'))
+$B.$dict_comp=function(module_name,parent_block_id){
 var $ix=Math.random().toString(36).substr(2,8)
 var $res='res'+$ix
 var $py=$res+"={}\n"
 var indent=0
-for(var $i=2;$i<arguments.length;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
+for(var $i=3;$i<arguments.length;$i++){for(var $j=0;$j<indent;$j++)$py +=' '
 $py +=arguments[$i]+':\n'
 indent +=4
 }
 for(var $j=0;$j<indent;$j++)$py +=' '
-$py +=$res+'.update({'+arguments[1].join('\n')+'})'
-var $mod_name='dc'+$ix
-var $root=$B.py2js($py,$mod_name,$B.line_info)
+$py +=$res+'.update({'+arguments[2].join('\n')+'})'
+var locals_id='dc'+$ix
+var $root=$B.py2js($py,module_name,locals_id,parent_block_id)
 $root.caller=$B.line_info
 var $js=$root.to_js()
-$B.vars[$mod_name]=$env
 eval($js)
-return eval($res)
+return __BRYTHON__.vars[locals_id][$res]
 }
-$B.$ternary=function(env,cond,expr1,expr2){
-var $s=[]
-for(var $py_builtin in _b_)$s.push("var "+$py_builtin+"=_b_['"+$py_builtin+"']")
-eval($s.join(';'))
-for(var attr in env)eval('var '+attr+'=env["'+attr+'"]')
-var res='if (bool('+cond+')){\n'
-res +='    var $res = '+unescape(expr1)+'\n}else{\n'
-res +='    var $res = '+unescape(expr2)+'\n}'
-eval(res)
-return $res
-}
-$B.$lambda=function($mod,$globals,$locals,$args,$body){for(var $attr in $globals)eval('var '+$attr+'=$globals["'+$attr+'"]')
-for(var $attr in $locals)eval('var '+$attr+'=$locals["'+$attr+'"]')
-var $res='lambda_'+Math.random().toString(36).substr(2,8)
+$B.$lambda=function(locals,$mod,parent_block_id,$args,$body){var rand=Math.random().toString(36).substr(2,8)
+var $res='lambda_'+$B.lambda_magic+'_'+rand
+var local_id='lambda'+rand
 var $py='def '+$res+'('+$args+'):\n'
 $py +='    return '+$body
-var $js=$B.py2js($py,'lambda').to_js()
+$B.vars[local_id]=$B.vars[local_id]||{}
+for(var $attr in locals){$B.vars[local_id][$attr]=locals[$attr]
+}
+var $js=$B.py2js($py,$mod,local_id,parent_block_id).to_js()
 eval($js)
-var $res=eval($res)
+var $res=__BRYTHON__.vars[local_id][$res]
 $res.__module__=$mod
 $res.__name__='<lambda>'
 return $res
+}
+$B.$search=function(name,globals_id){var res=$B.vars[globals_id][name]
+return res !==undefined ? res : $B.$NameError(name)
 }
 $B.$JS2Py=function(src){if(src===null||src===undefined)return _b_.None
 if(typeof src==='number'){if(src%1===0)return src
@@ -4763,9 +4861,9 @@ $B.$getitem=function(obj,item){if(Array.isArray(obj)&& typeof item=='number' && 
 }
 return _b_.getattr(obj,'__getitem__')(item)
 }
-$B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(obj.length < item)throw _b_.IndexError('list assignment index out of range')
-if(item>=0){obj[item]=value}
-else{obj[obj.length+item]=value}
+$B.$setitem=function(obj,item,value){if(Array.isArray(obj)&& typeof item=='number'){if(item<0){item+=obj.length}
+if(obj[item]===undefined){throw _b_.IndexError("list assignment index out of range")}
+obj[item]=value
 return
 }
 _b_.getattr(obj,'__setitem__')(item,value)
@@ -4931,7 +5029,8 @@ return result + pattern
 $B.make_node=function(top_node,node){var ctx_js=node.C.to_js()
 var is_cond=false,is_except=false,is_else=false
 if(node.locals_def){
-ctx_js='var $locals = $B.vars["'+top_node.iter_id+'"]'
+ctx_js='var $locals = $B.vars["'+top_node.iter_id+'"], '
+ctx_js +='$locals_id = "'+top_node.iter_id+'";'
 }
 if(node.is_catch){is_except=true;is_cond=true}
 if(node.C.type=='node'){var ctx=node.C.tree[0]
@@ -5009,7 +5108,7 @@ res=new $B.genNode('void(0)')
 }
 exit_node.replaced=true
 }
-if(head && this.is_break){res.data='$no_break'+this.loop_num+'=false;'
+if(head && this.is_break){res.data='$locals["$no_break'+this.loop_num+'"]=false;'
 res.data +='var err = new Error("break");'
 res.data +='err.__class__=__BRYTHON__.GeneratorBreak;throw err;'
 res.is_break=true
@@ -5059,19 +5158,29 @@ var $BRGeneratorDict={__class__:$B.$type,__name__:'generator'}
 $BRGeneratorDict.__iter__=function(self){return self}
 $BRGeneratorDict.__enter__=function(self){console.log("generator.__enter__ called")}
 $BRGeneratorDict.__exit__=function(self){console.log("generator.__exit__ called")}
-$BRGeneratorDict.__next__=function(self){
-var _b_=$B.builtins
+function clear_ns(iter_id){delete $B.vars[iter_id]
+delete $B.modules[iter_id]
+delete $B.bound[iter_id]
+}
+$BRGeneratorDict.__next__=function(self){var _b_=$B.builtins
 var $s=[]
 for(var $b in _b_)$s.push('var ' + $b +'=_b_["'+$b+'"]')
 eval($s.join(';'))
-for(var $attr in $B.vars[self.module]){eval("var "+$attr+"=$B.vars[self.module][$attr]")
-}
+for(var $attr in $B.vars[self.module]){try{eval("var "+$attr+"=$B.vars[self.module][$attr]")}
+catch(err){console.log('err for '+$attr)}}
 var $class=eval(self.$class)
-if(self._next===undefined){
+if(self.func_root.scope.C===undefined){var $globals=__BRYTHON__.vars[self.func_root.scope.id]
+}
+var scope_id=self.func_root.scope.id
+var first_iter=self._next===undefined
+if(first_iter){
 var src=self.func_root.src()+'\n)()'
 try{eval(src)}
-catch(err){console.log("cant eval\n"+src+'\n'+err);throw err}
-self._next=eval(self.func_name)
+catch(err){console.log("cant eval\n"+src+'\n'+err)
+clear_ns(self.iter_id)
+throw err
+}
+self._next=__BRYTHON__.$generators[self.iter_id]
 }
 self.num++
 if(self.gi_running){throw _b_.ValueError("ValueError: generator already executing")
@@ -5082,11 +5191,13 @@ try{var res=self._next.apply(null,self.args)
 _err.caught=true
 throw _err
 }
+clear_ns(self.iter_id)
 throw err
 }finally{self.gi_running=false
 }
 if(res[0].__class__==$GeneratorReturn){
 self._next=function(){throw StopIteration("after generator return")}
+clear_ns(self.iter_id)
 throw StopIteration('')
 }
 var yielded_value=res[0],yield_rank=res[1]
@@ -5094,18 +5205,14 @@ if(yield_rank==self.yield_rank)return yielded_value
 self.yield_rank=yield_rank
 var exit_node=self.func_root.yields[yield_rank]
 exit_node.replaced=false
-var root=new $B.genNode(self.def_ctx.to_js())
+var root=new $B.genNode(self.def_ctx.to_js('__BRYTHON__.generators["'+self.iter_id+'"]'))
 root.addChild(self.func_root.children[0].clone())
 fnode=self.func_root.children[1].clone()
 root.addChild(fnode)
 func_node=self.func_root.children[1]
-var js='var $globals = __BRYTHON__.vars["'+self.module+'"]'
-fnode.addChild(new $B.genNode(js))
-js='for(var $var in $globals){eval("var "+$var+"=$globals[$var]")}'
+var js='var $globals = __BRYTHON__.vars["'+self.func_root.module+'"]'
 fnode.addChild(new $B.genNode(js))
 var js='var $locals = __BRYTHON__.vars["'+self.iter_id+'"]'
-fnode.addChild(new $B.genNode(js))
-js='for(var $var in $locals){eval("var "+$var+"=$locals[$var]")}'
 fnode.addChild(new $B.genNode(js))
 var pnode=exit_node.parent
 var exit_in_if=pnode.is_if ||pnode.is_else
@@ -5175,7 +5282,7 @@ self.next_root=root
 var next_src=root.src()+'\n)()'
 try{eval(next_src)}
 catch(err){console.log('error '+err+'\n'+next_src)}
-self._next=eval(self.func_name)
+self._next=__BRYTHON__.generators[self.iter_id]
 return yielded_value
 }
 $BRGeneratorDict.__mro__=[$BRGeneratorDict,_b_.object.$dict]
@@ -5190,35 +5297,42 @@ throw err
 $BRGeneratorDict.send=function(self,value){self.sent_value=value
 return $BRGeneratorDict.__next__(self)
 }
-$BRGeneratorDict.$$throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
+$BRGeneratorDict.throw=function(self,value){if(_b_.isinstance(value,_b_.type))value=value()
 self.sent_value={__class__:$B.$GeneratorSendError,err:value}
 return $BRGeneratorDict.__next__(self)
 }
-$B.$BRgenerator=function(func,def_id,$class){var def_ctx=$B.modules[def_id]
+$B.$BRgenerator=function(scope_id,func_name,def_id,$class){var def_node=$B.modules[def_id]
+var def_ctx=def_node.C.tree[0]
 var counter=0 
-var func_name='$'+def_ctx.name 
-if($class!==undefined){func_name='$class.'+func_name}
-var def_node=def_ctx.parent.node
+var func=__BRYTHON__.vars[scope_id][func_name]
+__BRYTHON__.generators=__BRYTHON__.generators ||{}
 var module=def_node.module
-var try_node=def_node.children[1].children[0]
 var res=function(){var args=[]
 for(var i=0;i<arguments.length;i++){args.push(arguments[i])}
 var iter_id=def_id+'-'+counter
 counter++
 $B.vars[iter_id]={}
-var func_root=new $B.genNode(def_node.C.to_js())
+$B.bound[iter_id]={}
+for(var attr in $B.bound[def_id]){$B.bound[iter_id][attr]=true}
+__BRYTHON__.$generators=__BRYTHON__.$generators ||{}
+var func_root=new $B.genNode(def_ctx.to_js('__BRYTHON__.$generators["'+iter_id+'"]'))
+func_root.scope=__BRYTHON__.modules[scope_id]
+func_root.module=module
 func_root.yields=[]
 func_root.loop_ends={}
+func_root.def_id=def_id
 func_root.iter_id=iter_id
 for(var i=0;i<def_node.children.length;i++){func_root.addChild($B.make_node(func_root,def_node.children[i]))
 }
 var func_node=func_root.children[1].children[0]
 func_root.children[1].addChild(new $B.genNode('var err=StopIteration("");err.caught=true;throw err'))
-var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_ctx:def_ctx,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,num:0
+var obj={__class__ : $BRGeneratorDict,args:args,$class:$class,def_id:def_id,def_ctx:def_ctx,def_node:def_node,func:func,func_name:func_name,func_root:func_root,module:module,func_node:func_node,next_root:func_root,gi_running:false,iter_id:iter_id,id:iter_id,num:0
 }
 $B.modules[iter_id]=obj
+obj.parent_block=def_node.parent_block
 return obj
 }
+res.__call__=function(){console.log('call generator');return res.apply(null,arguments)}
 res.__repr__=function(){return "<function "+func.__name__+">"}
 return res
 }
@@ -5279,16 +5393,6 @@ ascii.__code__={}
 ascii.__code__.co_argcount=1
 ascii.__code__.co_consts=[]
 ascii.__code__.co_varnames=['obj']
-function assert_raises(){var $ns=$B.$MakeArgs('assert_raises',arguments,['exc','func'],[],'args','kw')
-var args=$ns['args']
-try{$ns['func'].apply(this,args)}
-catch(err){if(err.name!==$ns['exc']){throw AssertionError(
-"exception raised '"+err.name+"', expected '"+$ns['exc']+"'")
-}
-return
-}
-throw AssertionError("no exception raised, expected '"+$ns['exc']+"'")
-}
 function $builtin_base_convert_helper(obj,base){var value
 if(isinstance(obj,_b_.int)){value=obj
 }else if(obj.__index__ !==undefined){value=obj.__index__()
@@ -5366,8 +5470,7 @@ chr.__code__.co_consts=[]
 chr.__code__.co_varnames=['i']
 var $ClassmethodDict={__class__:$B.$type,__name__:'classmethod'}
 $ClassmethodDict.__mro__=[$ClassmethodDict,$ObjectDict]
-function classmethod(klass,func){
-func.$type='classmethod'
+function classmethod(func){func.$type='classmethod'
 return func
 }
 classmethod.__class__=$B.$factory
@@ -5408,15 +5511,13 @@ delattr.__code__={}
 delattr.__code__.co_argcount=2
 delattr.__code__.co_consts=[]
 delattr.__code__.co_varnames=['object','name']
-function dir(obj){
-if(obj===null){
+function dir(obj){if(obj===null){
 var mod_name=arguments[1]
 var res=[],$globals=$B.vars[mod_name]
-for(var attr in $globals){
-if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
+for(var attr in $globals){if(attr.charAt(0)=='$' && attr.charAt(1)!='$'){
 continue
 }
-res.push({__class__:$B.$AttrDict,name:attr})
+res.push(attr)
 }
 _b_.list.$dict.sort(res)
 return res
@@ -5471,6 +5572,39 @@ enumerate.__code__={}
 enumerate.__code__.co_argcount=2
 enumerate.__code__.co_consts=[]
 enumerate.__code__.co_varnames=['iterable']
+function $eval(src,_globals,locals){var is_exec=arguments[3]=='exec'
+if($B.exec_stack.length==0){$B.exec_stack=['__main__']}
+var env=$B.exec_stack[$B.exec_stack.length-1]
+if(is_exec && _globals===undefined){var mod_name=env
+}else{var mod_name='exec-'+Math.random().toString(36).substr(2,8)
+__BRYTHON__.$py_module_path[mod_name]=__BRYTHON__.$py_module_path['__main__']
+__BRYTHON__.vars[mod_name]={}
+__BRYTHON__.bound[mod_name]={}
+if(_globals!==undefined){for(var i=0;i<_globals.$keys.length;i++){__BRYTHON__.vars[mod_name][_globals.$keys[i]]=_globals.$values[i]
+__BRYTHON__.bound[mod_name][_globals.$keys[i]]=true
+}}else{for(var attr in $B.vars[env]){__BRYTHON__.vars[mod_name][attr]=$B.vars[env][attr]
+__BRYTHON__.bound[mod_name][attr]=true
+}}}
+$B.exec_stack.push(mod_name)
+try{var root=$B.py2js(src,mod_name,mod_name,'__builtins__')
+if(!is_exec){var instr=root.children[root.children.length-1]
+var type=instr.C.tree[0].type
+if(["expr","list_or_tuple"].indexOf(type)==-1){$B.line_info=[1,mod_name]
+throw SyntaxError("eval() argument must be an expression")
+}}
+var js=root.to_js()
+var res=eval(js)
+if(_globals!==undefined){var set_func=getattr(_globals,'__setitem__')
+for(var attr in $B.vars[mod_name]){if(['__name__','__doc__','__file__'].indexOf(attr)>-1){continue}
+set_func(attr,$B.vars[mod_name][attr])
+}}
+return res
+}finally{$B.exec_stack.pop()
+}}
+$eval.$is_func=true
+function exec(src,globals,locals){return $eval(src,globals,locals,'exec')||_b_.None
+}
+exec.$is_func=true
 var $FilterDict={__class__:$B.$type,__name__:'filter'}
 $FilterDict.__iter__=function(self){return self}
 $FilterDict.__repr__=$FilterDict.__str__=function(){return "<filter object>"},$FilterDict.__mro__=[$FilterDict,$ObjectDict]
@@ -5504,13 +5638,8 @@ if(obj[attr]!==undefined)return obj[attr]
 if(_default!==undefined)return _default
 throw _b_.AttributeError('object has no attribute '+attr)
 }
-if(attr.__class__===$B.$AttrDict)attr=attr.name
 if(attr=='__class__')return klass.$factory
-if(attr==='__dict__'){var res=_b_.dict()
-for(var $attr in obj){if($attr.charAt(0)!='$'){res.$keys.push($attr)
-res.$values.push(obj[$attr])
-}}
-return res
+if(attr==='__dict__'){return $B.obj_dict(obj)
 }
 if(attr==='__call__' &&(typeof obj=='function')){if(obj.$blocking){console.log('calling blocking function '+obj.__name__)
 }
@@ -5618,7 +5747,6 @@ hash.__code__.co_argcount=1
 hash.__code__.co_consts=[]
 hash.__code__.co_varnames=['object']
 function help(obj){if(obj===undefined)obj='help'
-if(typeof obj=='function')obj=getattr(obj,'__name__')
 if(typeof obj=='string' && _b_[obj]!==undefined){var _doc=_b_[obj].__doc__
 if(_doc !==undefined && _doc !=''){getattr($print,'__call__')(_doc)
 return
@@ -6104,9 +6232,10 @@ function slice(){var $ns=$B.$MakeArgs('slice',arguments,[],[],'args',null)
 var args=$ns['args']
 if(args.length>3){throw _b_.TypeError(
 "slice expected at most 3 arguments, got "+args.length)
+}else if(args.length==0){throw _b_.TypeError('slice expected at least 1 arguments, got 0')
 }
 var start=0,stop=0,step=1
-if(args.length==1){stop=args[0]}
+if(args.length==1){start=None;stop=args[0];step=None}
 else if(args.length>=2){start=args[0]
 stop=args[1]
 }
@@ -6114,7 +6243,7 @@ if(args.length>=3)step=args[2]
 if(step==0)throw ValueError("slice step must not be zero")
 var res={__class__ : $SliceDict,start:start,stop:stop,step:step
 }
-res.__repr__=res.__str__=function(){return 'slice('+start+','+stop+(args.length>=3 ? ','+step : '')+')'
+res.__repr__=res.__str__=function(){return 'slice('+start+','+stop+','+step+')'
 }
 return res
 }
@@ -6353,8 +6482,7 @@ return -other
 var $EllipsisDict={__class__:$B.$type,__name__:'Ellipsis',}
 $EllipsisDict.__mro__=[$ObjectDict]
 $EllipsisDict.$factory=$EllipsisDict
-var Ellipsis={__bool__ : function(){return False},__class__ : $EllipsisDict,
-__repr__ : function(){return 'Ellipsis'},__str__ : function(){return 'Ellipsis'},toString : function(){return 'Ellipsis'}}
+var Ellipsis={__bool__ : function(){return False},__class__ : $EllipsisDict,__repr__ : function(){return 'Ellipsis'},__str__ : function(){return 'Ellipsis'},toString : function(){return 'Ellipsis'}}
 for(var $key in $B.$comps){
 switch($B.$comps[$key]){case 'ge':
 case 'gt':
@@ -6419,7 +6547,7 @@ err.info+='\n'
 var last_info,tb=null
 for(var i=0;i<$B.call_stack.length;i++){var call_info=$B.call_stack[i]
 var lib_module=call_info[1]
-var caller=$B.modules[lib_module].caller
+var caller=$B.modules[lib_module].line_info
 if(caller!==undefined){call_info=caller
 lib_module=caller[1]
 }
@@ -6435,7 +6563,7 @@ if(i==0){tb={__class__:$TracebackDict,tb_frame:{__class__:$FrameDict},tb_lineno:
 var err_info=$B.line_info
 if(err_info!==undefined){while(1){var mod=$B.modules[err_info[1]]
 if(mod===undefined)break
-var caller=mod.caller
+var caller=mod.line_info
 if(caller===undefined)break
 err_info=caller
 }}
@@ -6474,7 +6602,8 @@ for(var attr in js_exc){console.log(attr,js_exc[attr])}
 console.log('line info '+ $B.line_info)
 console.log(js_exc.info)
 }
-if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){if($B.line_info!==undefined){var mod_name=$B.line_info[1]
+if(!js_exc.py_error){if($B.debug>0 && js_exc.info===undefined){
+if($B.line_info!==undefined){var mod_name=$B.line_info[1]
 var module=$B.modules[mod_name]
 if(module){if(module.caller!==undefined){
 $B.line_info=module.caller
@@ -6483,6 +6612,8 @@ var mod_name=$B.line_info[1]
 var lib_module=mod_name
 if(lib_module.substr(0,13)==='__main__,exec'){lib_module='__main__'}
 var line_num=$B.line_info[0]
+if($B.$py_src[mod_name]===undefined){console.log('pas de py_src pour '+mod_name)
+}
 var lines=$B.$py_src[mod_name].split('\n')
 js_exc.message +="\n  module '"+lib_module+"' line "+line_num
 js_exc.message +='\n'+lines[line_num-1]
@@ -6512,9 +6643,16 @@ for(var i=0;i<exc_list.length;i++){if(issubclass(exc_class,exc_list[i]))return t
 }
 return false
 }
+$B.builtins_block={id:'__builtins__',module:'__builtins__'}
+$B.modules['__builtins__']=$B.builtins_block
+$B.bound['__builtins__']={'__BRYTHON__':true,'$eval':true,'$open': true}
+$B.bound['__builtins__']['BaseException']=true
+$B.vars['__builtins__']={}
+_b_.__BRYTHON__=__BRYTHON__
 function $make_exc(names,parent){
 var _str=[]
 for(var i=0;i<names.length;i++){var name=names[i]
+$B.bound['__builtins__'][name]=true
 var $exc=(BaseException+'').replace(/BaseException/g,name)
 _str.push('var $'+name+'Dict={__class__:$B.$type,__name__:"'+name+'"}')
 _str.push('$'+name+'Dict.__mro__=[$'+name+'Dict].concat(parent.$dict.__mro__)')
@@ -6541,10 +6679,23 @@ $make_exc(['UnicodeError'],_b_.ValueError)
 $make_exc(['UnicodeDecodeError','UnicodeEncodeError','UnicodeTranslateError'],_b_.UnicodeError)
 $make_exc(['DeprecationWarning','PendingDeprecationWarning','RuntimeWarning','SyntaxWarning','UserWarning','FutureWarning','ImportWarning','UnicodeWarning','BytesWarning','ResourceWarning'],_b_.Warning)
 $make_exc(['EnvironmentError','IOError','VMSError','WindowsError'],_b_.OSError)
-var builtin_names=['Ellipsis','False','None','True','_','__build_class__','__debug__','__doc__','__import__','__name__','__package__','abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','copyright','credits','delattr','dict','dir','divmod','enumerate',
-'exec','exit','filter','_b_.float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','_b_.int','isinstance','issubclass','iter','len','license','list','locals','map','max','memoryview','min','next','NotImplemented','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
+$B.$NameError=function(name){
+throw _b_.NameError(name)
+}
+$B.$TypeError=function(msg){throw _b_.TypeError(msg)
+}
+var builtin_funcs=['abs','all','any','ascii','bin','bool','bytearray','bytes','callable','chr','classmethod','compile','complex','delattr','dict','dir','divmod','enumerate','exec','exit','filter','float','format','frozenset','getattr','globals','hasattr','hash','help','hex','id','input','int','isinstance','issubclass','iter','len','list','locals','map','max','memoryview','min','next','object','oct','open','ord','pow','print','property','quit','range','repr','reversed','round','set','setattr','slice','sorted','staticmethod','str','sum','super','tuple','type','vars','zip']
+for(var i=0;i<builtin_funcs.length;i++){$B.builtin_funcs[builtin_funcs[i]]=true
+}
+var other_builtins=['Ellipsis','False','None','True','_','__build_class__','__debug__','__doc__','__import__','__name__','__package__','copyright','credits','license','NotImplemented']
+var builtin_names=builtin_funcs.concat(other_builtins)
 for(var i=0;i<builtin_names.length;i++){var name=builtin_names[i]
-try{eval('_b_.'+name+'='+name)
+var name1=name
+if(name=='open'){name1='$url_open'}
+if(name=='super'){name='$$super'}
+$B.bound['__builtins__'][name]=true
+try{_b_[name]=eval(name1)
+$B.vars['__builtins__'][name]=_b_[name]
 if(typeof _b_[name]=='function'){if(_b_[name].__repr__===undefined){_b_[name].__repr__=_b_[name].__str__=(function(x){return function(){return '<built-in function '+x+'>'}})(name)
 }
 _b_[name].__module__='builtins'
@@ -6567,8 +6718,9 @@ _b_[name].__doc__=_b_[name].__doc__ ||''
 }
 catch(err){}}
 $B._alert=_alert
-_b_['$open']=$url_open
-_b_['$print']=$print
+_b_['$eval']=$eval
+_b_['open']=$url_open
+_b_['print']=$print
 _b_['$$super']=$$super
 })(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
@@ -6771,7 +6923,7 @@ function load_encoder(enc){
 if(from_unicode[enc]===undefined){var url=$B.brython_path
 if(url.charAt(url.length-1)=='/'){url=url.substr(0,url.length-1)}
 url +='/encodings/'+enc+'.js'
-var f=_b_.$open(url)
+var f=_b_.open(url)
 eval(f.$content)
 }}
 function decode(b,encoding,errors){var s=''
@@ -6928,13 +7080,14 @@ $JSConstructorDict.__call__=function(self){
 var args=[null]
 for(var i=1;i<arguments.length;i++){args.push(pyobj2jsobj(arguments[i]))
 }
-var factory=self.js.bind.apply(self.js,args)
+var factory=self.func.bind.apply(self.func,args)
 var res=new factory()
 return $B.$JS2Py(res)
 }
 $JSConstructorDict.__mro__=[$JSConstructorDict,$ObjectDict]
-function JSConstructor(obj){return{
-__class__:$JSConstructorDict,js:obj
+function JSConstructor(obj){
+return{
+__class__:$JSConstructorDict,func:obj.js_func
 }}
 JSConstructor.__class__=$B.$factory
 JSConstructor.$dict=$JSConstructorDict
@@ -6985,21 +7138,24 @@ if(obj.js===null)return $ObjectDict.__getattribute__(None,attr)
 if(attr==='__class__')return $JSObjectDict
 if(attr=="bind" && obj.js[attr]===undefined &&
 obj.js['addEventListener']!==undefined){attr='addEventListener'}
-if(obj.js[attr]!==undefined){if(typeof obj.js[attr]=='function'){
+var js_attr=obj.js[attr]
+if(obj.js_func && obj.js_func[attr]!==undefined){js_attr=obj.js_func[attr]
+}
+if(js_attr !==undefined){if(typeof js_attr=='function'){
 var res=function(){var args=[],arg
 for(var i=0;i<arguments.length;i++){args.push(pyobj2jsobj(arguments[i]))
 }
 if(attr==='replace' && obj.js===location){location.replace(args[0])
 return
 }
-var res=obj.js[attr].apply(obj.js,args)
+var res=js_attr.apply(obj.js,args)
 if(typeof res=='object')return JSObject(res)
 if(res===undefined)return None
 return $B.$JS2Py(res)
 }
 res.__repr__=function(){return '<function '+attr+'>'}
 res.__str__=function(){return '<function '+attr+'>'}
-return{__class__:$JSObjectDict,js:res}}else{return $B.$JS2Py(obj.js[attr])
+return{__class__:$JSObjectDict,js:res,js_func:js_attr}}else{return $B.$JS2Py(obj.js[attr])
 }}else if(obj.js===window && attr==='$$location'){
 return $Location()
 }
@@ -7057,11 +7213,11 @@ $B.JSObject=JSObject
 $B.JSConstructor=JSConstructor
 })(__BRYTHON__)
 ;(function($B){$B.stdlib={}
-var js=['_posixsubprocess','time','__random','_ajax','modulefinder','json','_multiprocessing','_timer','builtins','marshal','_io','math','_websocket','javascript','_jsre','_os','_sys','_browser','_svg','hashlib','_html','ripemd160','sha256','hmac-sha3','hmac-sha512','aes','md5','sha1','rabbit-legacy','hmac-sha224','hmac-sha1','hmac-md5','hmac-sha256','hmac-sha384','hmac-ripemd160','sha224','sha512','rc4','pbkdf2','sha3','tripledes','rabbit','sha384']
+var js=['_posixsubprocess','time','__random','_ajax','modulefinder','json','_multiprocessing','dis','_timer','builtins','marshal','_io','math','_websocket','javascript','_jsre','_os','_sys','_browser','_svg','hashlib','_html','ripemd160','sha256','hmac-sha3','hmac-sha512','aes','md5','sha1','rabbit-legacy','hmac-sha224','hmac-sha1','hmac-md5','hmac-sha256','hmac-sha384','hmac-ripemd160','sha224','sha512','rc4','pbkdf2','sha3','tripledes','rabbit','sha384']
 for(var i=0;i<js.length;i++)$B.stdlib[js[i]]=['js']
-var pylist=['reprlib','_imp','posix','_warnings','decimal','_collections','gc','_struct','_functools','weakref','keyword','optparse','operator','_sysconfigdata','platform','_socket','sys','_io','itertools','sre_parse','_testcapi','_weakrefset','signal','_codecs','fnmatch','sre_constants','site','locale','this','datetime','stat','heapq','token','shutil','linecache','textwrap','types','bisect','binascii','genericpath','abc','subprocess','pyre','fractions','_string','calendar','pwd','_markupbase','_thread','VFS_import','_weakref','formatter','pydoc','tempfile','queue','string','codecs','_abcoll','copyreg','os','sre_compile','pickle','imp','re','select','traceback','_threading_local','_sre','random','socket','external_import','webbrowser','markdown2','_dummy_thread','functools','struct','tokenize','inspect','csv','copy','antigravity','tarfile','colorsys','_strptime','io','getopt','_random','atexit','sysconfig','numbers','Clib','errno','warnings','configparser','difflib','dis','pprint','posixpath','base64','_csv','threading','encodings.utf_8','encodings.aliases','html.entities','html.parser','pydoc_data.topics','collections.abc','multiprocessing.pool','multiprocessing.util','multiprocessing.process','multiprocessing.dummy.connection','browser.object_storage','browser.ajax','browser.timer','browser.websocket','browser.html','browser.indexed_db','browser.svg','browser.markdown','browser.session_storage','browser.local_storage','test.test_re','test.re_tests','test.pystone','test.regrtest','test.test_int','test.support','urllib.parse','urllib.request','ui.dialog','ui.widget','ui.progressbar','ui.slider','logging.handlers','logging.config','xml.dom.NodeFilter','xml.dom.minicompat','xml.dom.expatbuilder','xml.dom.xmlbuilder','xml.dom.domreg','xml.dom.minidom','xml.dom.pulldom','xml.sax._exceptions','xml.sax.xmlreader','xml.sax.expatreader','xml.sax.saxutils','xml.sax.handler','xml.parsers.expat','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.etree.ElementInclude','site-packages.test_sp','site-packages.zipfile','http.cookies','importlib.machinery','importlib._bootstrap','importlib.abc','importlib.util','unittest.signals','unittest.__main__','unittest.runner','unittest.mock','unittest.main','unittest.util','unittest.loader','unittest.result','unittest.suite','unittest.case','unittest.test.dummy','unittest.test.test_discovery','unittest.test.test_case','unittest.test.test_skipping','unittest.test._test_warnings','unittest.test.test_setups','unittest.test.test_program','unittest.test.test_assertions','unittest.test.support','unittest.test.test_functiontestcase','unittest.test.test_suite','unittest.test.test_runner','unittest.test.test_loader','unittest.test.test_result','unittest.test.test_break','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.support','unittest.test.testmock.testwith','unittest.test.testmock.testsentinel','unittest.test.testmock.testpatch','unittest.test.testmock.testmock']
+var pylist=['reprlib','_imp','posix','_warnings','decimal','_collections','gc','_struct','_functools','weakref','keyword','optparse','operator','_sysconfigdata','platform','_socket','sys','_io','itertools','sre_parse','_testcapi','_weakrefset','signal','_codecs','fnmatch','sre_constants','site','locale','this','datetime','stat','heapq','token','shutil','linecache','textwrap','types','bisect','binascii','genericpath','abc','subprocess','pyre','fractions','_string','calendar','pwd','_markupbase','_thread','VFS_import','_weakref','formatter','pydoc','tempfile','queue','string','codecs','_abcoll','copyreg','os','sre_compile','pickle','imp','re','select','traceback','_threading_local','_sre','random','socket','external_import','webbrowser','markdown2','_dummy_thread','functools','struct','tokenize','inspect','csv','copy','antigravity','tarfile','colorsys','_strptime','io','getopt','_random','atexit','zipfile','sysconfig','numbers','Clib','errno','warnings','configparser','difflib','pprint','posixpath','base64','_csv','threading','encodings.utf_8','encodings.aliases','html.entities','html.parser','pydoc_data.topics','collections.abc','multiprocessing.pool','multiprocessing.util','multiprocessing.process','multiprocessing.dummy.connection','browser.object_storage','browser.ajax','browser.timer','browser.websocket','browser.html','browser.indexed_db','browser.svg','browser.markdown','browser.session_storage','browser.local_storage','test.test_re','test.re_tests','test.pystone','test.regrtest','test.test_int','test.support','urllib.parse','urllib.request','ui.dialog','ui.widget','ui.progressbar','ui.slider','logging.handlers','logging.config','xml.dom.NodeFilter','xml.dom.minicompat','xml.dom.expatbuilder','xml.dom.xmlbuilder','xml.dom.domreg','xml.dom.minidom','xml.dom.pulldom','xml.sax._exceptions','xml.sax.xmlreader','xml.sax.expatreader','xml.sax.saxutils','xml.sax.handler','xml.parsers.expat','xml.etree.ElementPath','xml.etree.ElementTree','xml.etree.cElementTree','xml.etree.ElementInclude','site-packages.test_sp','site-packages.turtle','site-packages.zipfile','site-packages.pygame.Surface','site-packages.pygame.draw','site-packages.pygame.image','site-packages.pygame.event','site-packages.pygame.font','site-packages.pygame.display','site-packages.pygame.time','site-packages.pygame.Rect','http.cookies','importlib.machinery','importlib._bootstrap','importlib.abc','importlib.util','unittest.signals','unittest.__main__','unittest.runner','unittest.mock','unittest.main','unittest.util','unittest.loader','unittest.result','unittest.suite','unittest.case','unittest.test.dummy','unittest.test.test_discovery','unittest.test.test_case','unittest.test.test_skipping','unittest.test._test_warnings','unittest.test.test_setups','unittest.test.test_program','unittest.test.test_assertions','unittest.test.support','unittest.test.test_functiontestcase','unittest.test.test_suite','unittest.test.test_runner','unittest.test.test_loader','unittest.test.test_result','unittest.test.test_break','unittest.test.testmock.testcallable','unittest.test.testmock.testhelpers','unittest.test.testmock.testmagicmethods','unittest.test.testmock.support','unittest.test.testmock.testwith','unittest.test.testmock.testsentinel','unittest.test.testmock.testpatch','unittest.test.testmock.testmock']
 for(var i=0;i<pylist.length;i++)$B.stdlib[pylist[i]]=['py']
-var pkglist=['encodings','html','pydoc_data','collections','multiprocessing','multiprocessing.dummy','browser','test','urllib','ui','logging','xml','xml.dom','xml.sax','xml.parsers','xml.etree','http','importlib','unittest','unittest.test','unittest.test.testmock']
+var pkglist=['encodings','html','pydoc_data','collections','multiprocessing','multiprocessing.dummy','browser','test','urllib','ui','logging','xml','xml.dom','xml.sax','xml.parsers','xml.etree','site-packages.pygame','http','importlib','unittest','unittest.test','unittest.test.testmock']
 for(var i=0;i<pkglist.length;i++)$B.stdlib[pkglist[i]]=['py',true]
 })(__BRYTHON__)
 
@@ -7165,7 +7321,7 @@ return run_py(module,path,module_contents)
 }
 $B.run_py=run_py=function(module,path,module_contents){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 $B.$py_module_path[module.name]=path
-var root=$B.py2js(module_contents,module.name)
+var root=$B.py2js(module_contents,module.name,module.name,'__builtins__')
 var body=root.children
 root.children=[]
 var mod_node=new $Node('expression')
@@ -7179,7 +7335,7 @@ var ex_node=new $Node('expression')
 new $NodeJSCtx(ex_node,')(__BRYTHON__)')
 root.add(ex_node)
 try{var js=root.to_js()
-if($B.$options.debug==10){console.log('code for module '+module.name)
+if($B.$options.debug==10 && module.name=='_thread'){console.log('code for module '+module.name)
 console.log(js)
 }
 eval(js)
@@ -7259,8 +7415,10 @@ function import_from_site_packages(mod_name,origin,package){var module={name:mod
 mod_path=mod_name.replace(/\./g,'/')
 var py_paths=[$B.brython_path+'Lib/site-packages/'+mod_path+'.py',$B.brython_path+'Lib/site-packages/'+mod_path+'/__init__.py']
 for(var i=0;i<py_paths.length;i++){var py_mod=import_py(module,py_paths[i],package)
-if(py_mod!==null){console.log(py_paths[i].substr(py_paths[i].length-12))
-if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){py_mod.__package__=mod_name
+if(py_mod!==null){
+if(py_paths[i].substr(py_paths[i].length-12)=='/__init__.py'){
+$B.imported[mod_name].$package=true
+py_mod.__package__=mod_name 
 }
 return py_mod
 }}
@@ -7817,8 +7975,7 @@ if(isinstance(other,_b_.float))return self.valueOf()> other.value
 if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.$dict.__hash__(other)
 }
 throw _b_.TypeError(
-"unorderable types: "+self.__class__.__name__+'() > '+
-$B.get_class(other).__name__+"()")
+"unorderable types: int() > "+$B.get_class(other).__name__+"()")
 }
 $comp_func +='' 
 for(var $op in $B.$comps){eval("$IntDict.__"+$B.$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))
@@ -8183,6 +8340,38 @@ dict.$dict=$DictDict
 $DictDict.$factory=dict
 $DictDict.__new__=$B.$__new__(dict)
 _b_.dict=dict
+$ObjDictDict={__class__:$B.$type,__name__:'obj_dict'}
+$ObjDictDict.__mro__=[$ObjDictDict,$DictDict,$ObjectDict]
+$ObjDictDict.__delitem__=function(self,key){$DictDict.__delitem__(self,key)
+delete self.$obj[key]
+}
+$ObjDictDict.__setitem__=function(self,key,value){$DictDict.__setitem__(self,key,value)
+self.$obj[key]=value
+}
+$ObjDictDict.clear=function(self){$DictDict.clear(self)
+for(var key in self.$obj){delete self.$obj[key]}}
+$ObjDictDict.pop=function(self,key,_default){$DictDict.pop(self,key,_default)
+delete self.$obj[key]
+return key
+}
+$ObjDictDict.popitem=function(self){var res=$DictDict.popitem(self)
+var key=res[0]
+delete self.$obj[key]
+return res
+}
+$ObjDictDict.update=function(self,other){$DictDict.update(self,other)
+for(var i=0;i<other.$keys.length;i++){self.$obj[other.$keys[i]]=other.$values[i]
+}}
+function obj_dict(obj){var res={__class__:$ObjDictDict,$obj:obj,$keys:[],$values:[]}
+for(var attr in obj){if(attr.charAt(0)!='$'){res.$keys.push(attr)
+res.$values.push(obj[attr])
+}}
+return res
+}
+obj_dict.$dict=$ObjDictDict
+obj_dict.__class__=$B.$factory
+$ObjDictDict.$factory=obj_dict
+$B.obj_dict=obj_dict
 })(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $s=[]
@@ -8239,26 +8428,37 @@ if(arg<0)pos=items.length+pos
 if(pos>=0 && pos<items.length)return items[pos]
 throw _b_.IndexError('list index out of range')
 }
-if(isinstance(arg,_b_.slice)){var step=arg.step===None ? 1 : arg.step
-if(step>0){var start=arg.start===None ? 0 : arg.start
-var stop=arg.stop===None ? self.length : arg.stop
-}else{var start=arg.start===None ? self.length-1 : arg.start
-var stop=arg.stop===None ? 0 : arg.stop
+if(isinstance(arg,_b_.slice)){
+var step=arg.step===None ? 1 : arg.step
+if(step==0){throw Error('ValueError : slice step cannot be zero')
 }
-if(start<0)start=_b_.int(self.length+start)
-if(stop<0)stop=self.length+stop
+var length=self.length
+var start,end
+if(arg.start===None){start=step<0 ? length-1 : 0
+}else{
+start=arg.start
+if(start < 0)start +=length
+if(start < 0)start=step<0 ? -1 : 0
+if(start >=length)start=step<0 ? length-1 : length
+}
+if(arg.stop===None){stop=step<0 ? -1 : length
+}else{
+stop=arg.stop
+if(stop < 0)stop +=length
+if(stop < 0)stop=step<0 ? -1 : 0
+if(stop >=length)stop=step<0 ? length-1 : length
+}
 var res=[],i=null,items=self.valueOf()
-if(step>0){if(stop<=start)return res
-for(var i=start;i<stop;i+=step){if(items[i]!==undefined){res.push(items[i])}
-else{res.push(None)}}
+if(step > 0){if(stop <=start)return res
+for(var i=start;i<stop;i+=step){res.push(items[i])
+}
 return res
 }else{
-if(stop>start){return res}
-else{
-for(var i=start;i>=stop;i+=step){if(items[i]!==undefined){res.push(items[i])}
-else{res.push(None)}}
+if(stop > start)return res
+for(var i=start;i>stop;i+=step){res.push(items[i])
+}
 return res
-}}}
+}}
 if(isinstance(arg,_b_.bool)){return $ListDict.__getitem__(self,_b_.int(arg))
 }
 throw _b_.TypeError('list indices must be integer, not '+arg.__class__.__name__)
@@ -8724,32 +8924,27 @@ var num=parseInt(src)
 num=num.toPrecision()
 res=num+''
 var len_num=res.length
-if(this.precision){					var prec=parseInt(this.precision.substr(1))
-				}else{					var prec=0
-				}
-				if(this.min_width){					var min_width=parseInt(this.min_width)
-				}else{					var min_width=0
-				}
-				var width=Math.max(len_num,prec,min_width)
-				var pad=' '
-				if(len_num===width){					if(flag_plus && num>=0){res='+'+res}					
-				}else{					if(flag_minus){						if(!flag_plus && !flag_space){							res=res+pad.repeat(width-len_num)
-						}
-						if(flag_plus){							res='+'+res+pad.repeat(width-len_num-1)
-						}
-						if(!flag_plus && flag_space){							res=pad+res+pad.repeat(width-len_num-1)
-						}
-					}else if(flag_plus && !flag_zero){						res=pad.repeat(width-len_num-1)+'+'+res
-					}else if(flag_plus && flag_zero){						if(num.substr(0,1)==='-'){							res='-'+'0'.repeat(width-len_num)+res.substr(1)
-						}else{							res='+'+'0'.repeat(width-len_num-1)+res
-						}
-					}else if(!flag_plus && !flag_space && flag_zero){						res='0'.repeat(width-len_num)+res
-					}else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){						if(prec>0 && prec > len_num){							res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
-						}else{							res=pad.repeat(width-len_num)+res
-						}
-					}else if(flag_space && flag_zero){						res=pad+'0'.repeat(width-len_num-1)+res
-					}
-				}
+if(this.precision){var prec=parseInt(this.precision.substr(1))
+}else{var prec=0
+}
+if(this.min_width){var min_width=parseInt(this.min_width)
+}else{var min_width=0
+}
+var width=Math.max(len_num,prec,min_width)
+var pad=' '
+if(len_num===width){if(flag_plus && num>=0){res='+'+res}}else{if(flag_minus){if(!flag_plus && !flag_space){res=res+pad.repeat(width-len_num)
+}
+if(flag_plus){res='+'+res+pad.repeat(width-len_num-1)
+}
+if(!flag_plus && flag_space){res=pad+res+pad.repeat(width-len_num-1)
+}}else if(flag_plus && !flag_zero){res=pad.repeat(width-len_num-1)+'+'+res
+}else if(flag_plus && flag_zero){if(num.substr(0,1)==='-'){res='-'+'0'.repeat(width-len_num)+res.substr(1)
+}else{res='+'+'0'.repeat(width-len_num-1)+res
+}}else if(!flag_plus && !flag_space && flag_zero){res='0'.repeat(width-len_num)+res
+}else if(!flag_plus && !flag_zero && !flag_space && !flag_minus){if(prec>0 && prec > len_num){res=pad.repeat(width-(prec-len_num)-1)+'0'.repeat(prec-len_num)+res
+}else{res=pad.repeat(width-len_num)+res
+}}else if(flag_space && flag_zero){res=pad+'0'.repeat(width-len_num-1)+res
+}}
 return res
 case 'f':
 case 'F':
@@ -8861,10 +9056,6 @@ for(var $op in $comps){eval("$StringDict.__"+$comps[$op]+'__ = '+$comp_func.repl
 $B.make_rmethods($StringDict)
 var $notimplemented=function(self,other){throw NotImplementedError("OPERATOR not implemented for class str")
 }
-$notimplemented +='' 
-for(var $op in $B.$operators){var $opfunc='__'+$B.$operators[$op]+'__'
-if(!($opfunc in str)){
-}}
 $StringDict.capitalize=function(self){if(self.length==0)return ''
 return self.charAt(0).toUpperCase()+self.substr(1).toLowerCase()
 }
@@ -9327,19 +9518,24 @@ str=str.replace(re,"\\"+specials.charAt(i))
 }
 return str
 }
-$StringDict.replace=function(self,old,_new,count){if(count!==undefined){if(!isinstance(count,[_b_.int,_b_.float])){throw __b_.TypeError(
-"'"+str(count.__class__)+"' object cannot be interpreted as an integer")
-}
-var re=new RegExp($re_escape(old),'g')
+$StringDict.replace=function(self,old,_new,count){
+if(count===undefined){count=-1
+}else{
+if(!isinstance(count,[_b_.int,_b_.float])){throw _b_.TypeError("'" + str(count.__class__)+ "' object cannot be interpreted as an integer")
+}else if(isinstance(count,_b_.float)){throw _b_.TypeError("integer argument expected, got float")
+}}
 var res=self.valueOf()
-while(count>0){if(self.search(re)==-1){return res}
-res=res.replace(re,_new)
+var pos=-1
+if(count < 0)count=res.length
+while(count > 0){pos=res.indexOf(old,pos)
+if(pos < 0)
+break
+res=res.substr(0,pos)+ _new + res.substr(pos + old.length)
+pos=pos + _new.length
 count--
 }
 return res
-}else{var re=new RegExp($re_escape(old),"g")
-return self.replace(re,_new)
-}}
+}
 $StringDict.rfind=function(self){
 var start=0,end=self.length
 var $ns=$B.$MakeArgs("$StringDict.find",arguments,['self','sub'],['start','end'],null,null)
@@ -9490,7 +9686,7 @@ return f()
 catch(err){$B.$pop_exc()
 try{
 var f=getattr(arg,'__repr__')
-return f()
+return getattr(f,'__call__')()
 }catch(err){$B.$pop_exc()
 console.log(err+'\ndefault to toString '+arg);return arg.toString()
 }}}
@@ -9513,25 +9709,7 @@ $StringSubclassDict.__mro__=[$StringSubclassDict,$ObjectDict]
 $B.$StringSubclassFactory={__class__:$B.$factory,$dict:$StringSubclassDict
 }
 _b_.str=str
-$B.$AttrDict={__class__:$B.$type,__name__:'attribute'}
-$B.$AttrDict.__getitem__=function(self,arg){var _name=self.name
-if(_name.substr(0,2)=='$$')_name=_name.substr(2)
-return _b_.getattr(_name,'__getitem__')(arg)
-}
-$B.$AttrDict.__mro__=[$B.$AttrDict,$ObjectDict]
-$B.$AttrDict.__repr__=function(self){if(self.name.substr(0,2)=='$$')return _b_.repr(self.name.substr(2))
-return _b_.repr(self.name)
-}
-$B.$AttrDict.__str__=function(self){if(self.name.substr(0,2)=='$$')return _b_.str(self.name.substr(2))
-return _b_.str(self.name)
-}
-for(var method in $StringDict){if($B.$AttrDict[method]!==undefined){continue}
-$B.$AttrDict[method]=(function(m){return function(){var args=[]
-for(var i=0;i<arguments.length;i++){args.push(str(arguments[i]))
-}
-return $StringDict[m].apply(null,args)
-}})(method)
-}})(__BRYTHON__)
+})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var $s=[]
 for(var $b in _b_)$s.push('var ' + $b +'=_b_["'+$b+'"]')
@@ -10212,7 +10390,6 @@ DOMNode.reset=function(self){
 return function(){self.elt.reset()}}
 DOMNode.style=function(self){
 self.elt.style.float=self.elt.style.cssFloat ||self.style.styleFloat
-console.log('get style')
 return $B.JSObject(self.elt.style)
 }
 DOMNode.setSelectionRange=function(self){
@@ -10231,6 +10408,8 @@ DOMNode.set_class_name=function(self,arg){self.elt.setAttribute('class',arg)
 DOMNode.set_html=function(self,value){self.elt.innerHTML=str(value)
 }
 DOMNode.set_style=function(self,style){
+if(!_b_.isinstance(style,_b_.dict)){throw TypeError('style must be dict, not '+$B.get_class(style).__name__)
+}
 for(var i=0;i<style.$keys.length;i++){var key=style.$keys[i],value=style.$values[i]
 if(key.toLowerCase()==='float'){self.elt.style.cssFloat=value
 self.elt.style.styleFloat=value
@@ -10464,6 +10643,15 @@ _class_string=_c.replace(' '+name+' ','')
 }
 this.__setattr('class',_class_string)
 }
+var $WinDict={__class__:$B.$type,__name__:'window'}
+$WinDict.__getattribute__=function(self,attr){if(window[attr]!==undefined){return JSObject(window[attr])}
+throw _b_.AttributeError("'window' object has no attribute '"+attr+"'")
+}
+$WinDict.__setattr__=function(self,attr,value){console.log('set attr '+attr+' of window ')
+window[attr]=value
+console.log(window[attr])
+}
+$WinDict.__mro__=[$WinDict,$ObjectDict]
 var win=JSObject(window)
 win.get_postMessage=function(msg,targetOrigin){if(isinstance(msg,dict)){var temp={__class__:'dict'}
 for(var i=0;i<msg.__len__();i++)temp[msg.$keys[i]]=msg.$values[i]

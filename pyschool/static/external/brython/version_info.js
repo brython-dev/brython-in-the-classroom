@@ -1,5 +1,5 @@
-__BRYTHON__.implementation = [2, 2, 1, 'rc', 0]
-__BRYTHON__.__MAGIC__ = "2.2.1"
+__BRYTHON__.implementation = [3, 0, 1, 'alpha', 0]
+__BRYTHON__.__MAGIC__ = "3.0.1"
 __BRYTHON__.version_info = [3, 3, 0, 'alpha', 0]
 __BRYTHON__.builtin_module_names = ["posix","_posixsubprocess",
     "time",
@@ -8,6 +8,7 @@ __BRYTHON__.builtin_module_names = ["posix","_posixsubprocess",
     "modulefinder",
     "json",
     "_multiprocessing",
+    "dis",
     "_timer",
     "builtins",
     "marshal",
