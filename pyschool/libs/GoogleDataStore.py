@@ -278,6 +278,7 @@ class ShareHandler:
                  _sr=ShareRecord.query(ShareRecord.dir == _dir,
                                        ShareRecord.user == self._user.key).fetch()
                  if len(_sr) == 1:
+                    _sr[0]=_sr[0].key.get(use_cache=False)
                     _pos._shareid=_sr[0].shareid
                     _pos._active=_sr[0].active
                     #_pos.name=_dir
