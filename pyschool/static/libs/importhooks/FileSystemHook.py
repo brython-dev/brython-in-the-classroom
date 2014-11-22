@@ -16,14 +16,10 @@ class FileSystemHook:
          raise ImportError
 
   def find_module(self):
-      def cb(value):
-          pass
-
       if not self._path.startswith('/pyschool'):
          raise ImportError
 
       fs=JSObject(window._FS)
-      console.log(fs.__name__)
 
       for _ext in ('.py', '/__init__.py'):
           _modpath='%s/%s%s' % (self._path, self._fullname, _ext)
