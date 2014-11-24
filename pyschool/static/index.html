@@ -37,8 +37,10 @@ iframe {padding: 0px; width:98%;height:98%;}
 }
 </style>
 
+<script type="text/python" src="libs/importhooks/ShareHook.py"></script>
 <script type="text/python" src="libs/importhooks/localstorage.py"></script>
 <script type="text/python" src="libs/importhooks/custom_VFS.py"></script>
+<script type="text/python" src="libs/importhooks/FileSystemHook.py"></script>
 
 <script type="text/javascript">
 $(function(){
@@ -53,6 +55,7 @@ $(function(){
        //eventually remove this line once database, etc are finished..
        $('#login_dialog').dialog('close');
        $('#signup_dialog').dialog('close');
+       $('#share_filelist_dialog').dialog('close');
 });
 </script>
 
@@ -60,7 +63,7 @@ $(function(){
 from javascript import console, JSObject
 from browser import window
 
-_jquery=JSObject(jQuery)
+_jquery=JSObject(window.jQuery)
 
 def open_file_onRowClicked(row):
     if row._isa_file:
@@ -94,6 +97,8 @@ import time
 import sys
 import traceback
 import json
+import urllib.request
+import urllib.parse
 
 import editor
 
@@ -102,20 +107,21 @@ import local_storage_fs as filesystem
 from FileSystemBase import FileSystemNode
 import FileObject
 
-_jquery=JSObject(jQuery)
+_jquery=JSObject(window.jQuery)
 editors=editor.Editor('editortabs')
 
-global fs
+#global fs
 fs=filesystem.FileSystem('/pyschool')
 window._FS=fs
 display_message=JSObject(window.display_message)
 
+sharelist={}
 document["pyconsole"].value=''  #clear console on load
 
 def run():
     #find selected Tab (and get its contents)
+    document['pyconsole'].value=''
     src=editors.getCurrentText()
-    document["pyconsole"].value=''
     t0 = time.perf_counter()
     try:
         exec(src,globals())
@@ -142,6 +148,7 @@ def toolbar_open_file_dialog():
            display_message('no files available')
            return
 
+        #console.log(_filelist)
         _jquery('#open_file_treegrid').treegrid('loadData', [_filelist])
         _jquery('#open_file_dialog').dialog('open')
 
@@ -156,15 +163,15 @@ def open_file():
            if fileobj is None:  #there was an error (or file doesn't exist)
               #show message saying file .
               display_message('file not found')
-              console.log('file not found')
+              #console.log('file not found')
            elif isinstance(fileobj, FileObject.FileObject):
               #open new tab with file contents
               editors.add_editor(filename=fileobj.get_attribute('filename'), 
                                  content=fileobj.get_attribute('contents'))
               display_message('file loaded successfully.')
-              console.log('file loaded successfully.')
+              #console.log('file loaded successfully.')
            else: #invalid fileobj, output error message
-              console.log('invalid fileobj')
+              display_message('Invalid file object.')
 
     _filename=document["open_file_textbox"].value
     fs.read_file(_filename, cb)
@@ -181,31 +188,30 @@ def open_url():
     _jquery('#open_url_dialog').dialog('close')
     _filename=document['open_url_textbox'].value
 
-    import urllib.request
     _fp, _url, _headers=urllib.request.urlopen(_filename)
     _data=_fp.read()
 
     if _data is None:  #there was an error (or URL doesn't exist)
        #show message saying file .
        display_message('URL not found')
-       console.log('URL not found')
+       #console.log('URL not found')
     elif isinstance(_data, str):
        #open new tab with file contents
        editors.add_editor(filename=_filename, 
                           content=_data)
        display_message('file loaded successfully.')
     else: #invalid data, output error message
-       console.log('invalid URL')
+       display_message('Invalid URL.')
 
 
 def save_file():
     def callback(_results):
         if _results['status'] == 'Okay':
            display_message(_results['message'])
-           console.log('file saved successfully')
+           #console.log('file saved successfully')
         else:
            display_message(_results['message'])
-           console.log('error saving file')
+           #console.log('error saving file')
 
     _filename=editors.getCurrentTabName()
     if _filename.startswith('Untitled-'):
@@ -235,7 +241,7 @@ def parse_cookie():
     if document.cookie == '':
        return {}
 
-    _items=document.cookie.split(';')
+    _items=document.cookie.split('|')
     for _item in _items:
         _variable, _value=_item.split('=')
         _dict[_variable]=_value
@@ -253,21 +259,24 @@ def login():
        _password=document["login_password"].value
        _url="/Auth?userid=%s&password=%s" % (_userid, _password)
 
-       import urllib.request
        _fp, _url, _headers=urllib.request.urlopen(_url)
        _data=_fp.read()
 
        _json=json.loads(_data)
        if _json['status'] == 'Okay':
           _jquery('#login_dialog').dialog('close')
-          global fs
+          #global fs
           import remote_storage_fs
           fs=remote_storage_fs.GoogleDataStorage("/pyschool")
+          window._FS=fs
           fs.set_token(_json['token'])
-          document.cookie='token=%s;login_type=authenticate' % _json['token']
+          window._token=_json['token']
+          #for some reason, use a semicoln delimiter causes everything after
+          # delimiter to disappear, so using | instead.
+          document.cookie='token=%s|login_type=authenticate' % _json['token']
 
           #is there a better way? (like setTitle)?
-          _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Cloud')
+          _jquery('#east').panel('header').find('div.panel-title').html('Storage: Remote (ie, Google Cloud)')
           _jquery('#login_dialog').dialog('close')
           return
 
@@ -281,6 +290,7 @@ def login():
 
 def signup():
     #check that password and password2 are identical
+
     if len(document["signup_password"].value) < 6:
        #password must be at least 6 chars in length
        document["signup_message"].html="Password must be at least 6 characters in length"
@@ -292,24 +302,21 @@ def signup():
 
     _userid=document["signup_userid"].value
     _password=document["signup_password"].value
-    import urllib.request
     _url="/CreateUserAccount?userid=%s&password=%s" % (_userid, _password)
-    _fp, _url, _headers=urllib.request.urlopen(_url)
+    _fp, _, _=urllib.request.urlopen(_url)
     _data=_fp.read()
 
     try:
        _json=json.loads(_data)
-    except:
-       document["signup_message"].text="Error contacting server"
+    except Exception as e:
+       document["signup_message"].html="Error contacting server, %s" % str(e)
        return
 
-    console.log(_json)
     if _json['status'] == 'Okay':
        _jquery('#signup_dialog').dialog('close')
        return
 
     document["signup_message"].html=_json["message"]
-
 
 def full_screen_toggle():
     global _full_screen
@@ -323,30 +330,77 @@ def full_screen_toggle():
 
     _full_screen=not _full_screen
 
+
+def sharelist_checkbox(fullname, obj):
+    global sharelist
+    #console.log(fullname, obj.checked)
+    if obj.checked:
+       sharelist[fullname]='Y'
+    else:
+       sharelist[fullname]='N'
+
+def open_filelist_dialog():
+    global sharelist
+    sharelist={}
+
+    def onClickRow(record):
+        if record['shareid'] not in ('', None):
+           document['share_filelist_status'].text='/Shares/%s' % record['shareid']
+        else:
+           document['share_filelist_status'].text=' '
+
+    _dict={'token': window._token, 'command': 'filelist'}
+    _fp,_,_=urllib.request.urlopen('/SharePermissions', data=_dict)
+    data=_fp.read()
+    _data=json.loads(data)
+
+    _jquery('#share_filelist_table').treegrid({'treeField':'name', 
+                                               'idField': 'id',
+                                                'onClickRow': onClickRow
+                                               })
+
+    _jquery('#share_filelist_table').treegrid('loadData', [_data['files']])
+
+    _jquery('#share_filelist_dialog').dialog('open')
+
+def share_filelist_save():
+    # send list to server for it to update the list.
+    global sharelist
+    _dict={'directories': json.dumps(sharelist), 'token': window._token, 'command':'directory_access'}
+    _fp,_,_=urllib.request.urlopen("/SharePermissions", data=_dict)
+    _result=_fp.read()
+    #should return okay...
+
+    # ask for file list again.. then repopulate data grid.
+    open_filelist_dialog()
+
 _full_screen=False
 
 if 'script' in document.query:
-   document['open_url_textbox'].value=document.query['script']
+   _script=document.query['script']
+   #document['open_url_textbox'].value=_script.replace('%2F', '/')
+   document['open_url_textbox'].value=urllib.parse.unquote(_script)
    open_url()
 
-print(document.cookie)
 _cookie=parse_cookie()
+
+document['loading_dialog'].style.display='none'
 if not 'login_type' in _cookie:
    _jquery('#login_dialog').dialog('open')
 elif _cookie['login_type'] == 'authenticate' and 'token' in _cookie:
-   _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Cloud')
+   _jquery('#east').panel('header').find('div.panel-title').html('Storage: Remote (ie, Google Cloud)')
    global fs
    import remote_storage_fs
    fs=remote_storage_fs.GoogleDataStorage("/pyschool")
-   console.log(_cookie['token'])
    fs.set_token(_cookie['token'])
+   window._token=_cookie['token']
 elif _cookie['login_type'] == 'guest':
    _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
 else:
    _jquery('#login_dialog').dialog('open')
 
 _jquery('#east-tabs').tabs('select', 1)  #allows pydiv panel to set width/height
-#_jquery('#east-tabs').tabs('select', 0)
+
 
 window.run=run
 window.create_tab=create_tab
@@ -359,6 +413,9 @@ window.clear_outputs=clear_outputs
 window.login=login
 window.full_screen_toggle=full_screen_toggle
 window.signup=signup
+window.open_filelist_dialog=open_filelist_dialog
+window.share_filelist_save=share_filelist_save
+window.sharelist_checkbox=sharelist_checkbox
 </script>
 
 <script type="text/javascript">
@@ -373,6 +430,19 @@ function login_type_onChange(e) {
        $('#login_user_entry').hide()
     }
 }
+
+// for some reason the python version of this file doesn't work with treegrid.
+function formatCheckBox(value, row) {
+  if (row.type == 'file') return ''
+
+  var click="sharelist_checkbox('"+row.fullname+"', this)"
+  if (value) {
+     return '<input type="checkbox" onclick="'+click+'" checked></input>'
+  }
+
+  return '<input type="checkbox" onclick="'+click+'"></input>'
+}
+
 </script>
 
 </head>
@@ -480,6 +550,12 @@ function login_type_onChange(e) {
         </div>
 
         <div>
+            <span>Share/Unshare</span>
+            <div style="width:150px;">
+                <div onclick="open_filelist_dialog()">File List</div>
+            </div>
+        </div>
+        <div>
             <span>Help/Docs</span>
             <div style="width:150px;">
                 <div onclick="window.open('http://brython.info/doc/en/index.html')">Brython Documentation</div>
@@ -543,11 +619,11 @@ function login_type_onChange(e) {
 
     <div class="easyui-dialog" id="login_dialog" title="Login"
         data-options="buttons:'#login_buttons',width:400,height:200">
-          Login Type:
+          File Storage Type:
           <select id="login_type" name="login_type1" class="easyui-combobox" 
                   data-options="onChange:login_type_onChange">
-             <option value="guest">Login as guest</option>
-             <option value="authenticate">Login with userid/password</option>
+             <option value="guest">save files locally</option>
+             <option value="authenticate">save files remotely</option>
           </select>
           <table id="login_user_entry" border="0" style="display:none">
              <tr><td>Userid:</td>
@@ -556,19 +632,19 @@ function login_type_onChange(e) {
              <tr><td>Password:</td>
                  <td><input type="password" id="login_password" value=""></td>
              </tr>
-             <tr><td colspan="2"><span id="login_message"></span></td></tr>
+             <tr><td colspan="2"><span id="login_message" style="color:red"></span>
+                 </td>
+             </tr>
              <tr><td colspan="2">Don't have an account? 
                  <a href="javascript:void(0)" 
-                      onclick="$('#signup_message').val('');$('#signup_dialog').dialog('open')">Sign up</a></td>
+                      onclick="$('#signup_message').val('');$('#signup_dialog').dialog('open')">Sign up for a 100% free account</a></td>
              </tr>
           </table>
     </div>
 
     <div id="login_buttons">
         <a href="javascript:void(0)" class="easyui-linkbutton"
-            onclick="login()">Login</a>
-        <a href="javascript:void(0)" class="easyui-linkbutton"
-            onclick="javascript:$('#login_dialog').dialog('close')">Close</a>
+            onclick="login()">Submit</a>
     </div>
 
     <div id="signup_dialog" class="easyui-dialog" title="Sign up.."
@@ -593,6 +669,31 @@ function login_type_onChange(e) {
             onclick="signup()">Sign up</a>
         <a href="javascript:void(0)" class="easyui-linkbutton"
             onclick="javascript:$('#signup_dialog').dialog('close')">Close</a>
+    </div>
+
+    <div class="easyui-dialog" id="share_filelist_dialog" title="File List"
+        data-options="buttons:'#share_filelist_buttons',width:500">
+        <table id="share_filelist_table"
+               data-options="">
+           <thead>
+             <th data-options="field:'name',width:330">Directory</th>
+             <th data-options="field:'shareid',width:100">ShareID</th>
+             <th data-options="field:'active',title:'Share',formatter:formatCheckBox,editor:{type:'checkbox',options:{on:true,off:false}},width:50">Share</th>
+           <!--  <th data-options="field:'active',title:'Share',checkbox:true,editor:{type:'checkbox',options:{on:true,off:false}}">Share</th> -->
+           </thead>
+        </table>
+        <span id="share_filelist_status"></span>
+    </div>
+
+    <div id="share_filelist_buttons">
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="share_filelist_save()">Save</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton"
+            onclick="javascript:$('#share_filelist_dialog').dialog('close')">Close</a>
+    </div>
+
+    <div id="loading_dialog" style="width:25px;height:25px;position:absolute;left:50%;top:50%;z-index:1000">
+      <img src="/css/images/loading.gif" width="25px" height="25px" alt="Loading..">
     </div>
 
 </body>

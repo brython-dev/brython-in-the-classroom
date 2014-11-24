@@ -16,7 +16,7 @@ class RemoteFileSystem(FileSystemBase.FileSystem):
       self._token=token
 
   def _remote_call(self, data):
-      console.log("remote call", data)
+      #console.log("remote call", data)
       data['token']=self._token   #add in token to call
       _json=json.dumps({'data': data})
 
