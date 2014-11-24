@@ -274,7 +274,7 @@ def login():
           document.cookie='token=%s;login_type=authenticate' % _json['token']
 
           #is there a better way? (like setTitle)?
-          _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Cloud')
+          _jquery('#east').panel('header').find('div.panel-title').html('Storage: Remote (ie, Google Cloud)')
           _jquery('#login_dialog').dialog('close')
           return
 
@@ -617,11 +617,11 @@ function formatCheckBox(value, row) {
 
     <div class="easyui-dialog" id="login_dialog" title="Login"
         data-options="buttons:'#login_buttons',width:400,height:200">
-          Login Type:
+          File Storage Type:
           <select id="login_type" name="login_type1" class="easyui-combobox" 
                   data-options="onChange:login_type_onChange">
              <option value="guest">save files locally</option>
-             <option value="authenticate">use remote storage</option>
+             <option value="authenticate">save files remotely</option>
           </select>
           <table id="login_user_entry" border="0" style="display:none">
              <tr><td>Userid:</td>
@@ -630,7 +630,9 @@ function formatCheckBox(value, row) {
              <tr><td>Password:</td>
                  <td><input type="password" id="login_password" value=""></td>
              </tr>
-             <tr><td colspan="2"><span id="login_message"></span></td></tr>
+             <tr><td colspan="2"><span id="login_message" style="color:red"></span>
+                 </td>
+             </tr>
              <tr><td colspan="2">Don't have an account? 
                  <a href="javascript:void(0)" 
                       onclick="$('#signup_message').val('');$('#signup_dialog').dialog('open')">Sign up for a 100% free account</a></td>
@@ -641,10 +643,6 @@ function formatCheckBox(value, row) {
     <div id="login_buttons">
         <a href="javascript:void(0)" class="easyui-linkbutton"
             onclick="login()">Submit</a>
-       <!--
-        <a href="javascript:void(0)" class="easyui-linkbutton"
-            onclick="javascript:$('#login_dialog').dialog('close')">Close</a>
-       -->
     </div>
 
     <div id="signup_dialog" class="easyui-dialog" title="Sign up.."
