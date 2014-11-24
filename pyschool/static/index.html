@@ -241,7 +241,7 @@ def parse_cookie():
     if document.cookie == '':
        return {}
 
-    _items=document.cookie.split(';')
+    _items=document.cookie.split('|')
     for _item in _items:
         _variable, _value=_item.split('=')
         _dict[_variable]=_value
@@ -271,7 +271,9 @@ def login():
           window._FS=fs
           fs.set_token(_json['token'])
           window._token=_json['token']
-          document.cookie='token=%s;login_type=authenticate' % _json['token']
+          #for some reason, use a semicoln delimiter causes everything after
+          # delimiter to disappear, so using | instead.
+          document.cookie='token=%s|login_type=authenticate' % _json['token']
 
           #is there a better way? (like setTitle)?
           _jquery('#east').panel('header').find('div.panel-title').html('Storage: Remote (ie, Google Cloud)')
@@ -386,7 +388,7 @@ document['loading_dialog'].style.display='none'
 if not 'login_type' in _cookie:
    _jquery('#login_dialog').dialog('open')
 elif _cookie['login_type'] == 'authenticate' and 'token' in _cookie:
-   _jquery('#east').panel('header').find('div.panel-title').html('Storage: Google Cloud')
+   _jquery('#east').panel('header').find('div.panel-title').html('Storage: Remote (ie, Google Cloud)')
    global fs
    import remote_storage_fs
    fs=remote_storage_fs.GoogleDataStorage("/pyschool")
