@@ -14,7 +14,7 @@ def spin():
     global _counter
     _counter+=1
     _box.rotate(angle=0.01, axis=vec(1,0,0))
-    _box.pos=vec(int((_counter%100)/10), 0, 0)
+    #_box.pos=vec(int((_counter%100)/10), 0, 0)
     _arrow.rotate(angle=0.01, axis=vec(0,1,0))
     _cylinder.rotate(angle=0.01, axis=vec(0,0,1))
 
