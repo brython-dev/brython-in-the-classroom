@@ -19,6 +19,7 @@ class FileSystem(FileSystemBase.FileSystem):
           if not _file.startswith('/pyschool'): continue
           try:
             _fileobj=FileObject.FileObject()
+            #_fileobj=FileSystemBase.FileObject()
             _fileobj.from_json(storage[_file])
           except Exception as e:
             #not a FileObject file..
@@ -35,12 +36,14 @@ class FileSystem(FileSystemBase.FileSystem):
       """ retrieves file from storage, returns fileobj if successful,
           return None if unsuccessful
       """
+      print(filename)
       try:
         _json=storage[filename]
       except KeyError:
         return {'status': 'Error', 'message': 'File doesn''t exist'}
 
       _f=FileObject.FileObject()
+      #_f=FileSystemBase.FileObject()
       _f.from_json(_json)
       return {'status': 'Okay', 'fileobj': _f}
 

@@ -10,7 +10,7 @@ for _root, _dirs, _files in os.walk('FileSystem'):
            _data=_fp.read()
            _fp.close()
 
-           _dict[_file]=_data
+           _dict[_file.replace('.py', '')]=_data
 
 _fp=open('custom_VFS.js', 'w')
 _fp.write("window._custom_VFS=%s" % json.dumps(_dict))

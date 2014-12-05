@@ -20,8 +20,6 @@ class ShareHook:
          fullname='/%s' % fullname
 
       self._url="%s%s.py" % (path, fullname)
-      #print(self._url)
-      #"/Shares?shareid=%s/%s.py" % (path[7:], fullname.replace('.', '/'))
 
   def find_module(self):
       _fp,_,_=urllib.request.urlopen(self._url)

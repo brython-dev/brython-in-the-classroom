@@ -37,86 +37,31 @@ iframe {padding: 0px; width:98%;height:98%;}
 }
 </style>
 
-<script type="text/python" src="libs/importhooks/ShareHook.py"></script>
-<script type="text/python" src="libs/importhooks/localstorage.py"></script>
 <script type="text/python" src="libs/importhooks/custom_VFS.py"></script>
-<script type="text/python" src="libs/importhooks/FileSystemHook.py"></script>
-
-<script type="text/javascript">
-$(function(){
-       $(window).resize(function(){
-          $('#container').layout('resize');
-       });
-           
-       $('#open_file_dialog').dialog('close');
-       $('#save_file_as_dialog').dialog('close');
-       $('#open_url_dialog').dialog('close');
-
-       //eventually remove this line once database, etc are finished..
-       $('#login_dialog').dialog('close');
-       $('#signup_dialog').dialog('close');
-       $('#share_filelist_dialog').dialog('close');
-});
-</script>
 
 <script type="text/python">
-from javascript import console, JSObject
-from browser import window
-
-_jquery=JSObject(window.jQuery)
-
-def open_file_onRowClicked(row):
-    if row._isa_file:
-       document['open_file_textbox'].value=row.fullname
-
-_jquery('#open_file_treegrid').treegrid({'onClickRow': open_file_onRowClicked})
-
-</script>
-
-<script type="text/javascript">
-function display_message(message){
-  $.messager.show({
-     title:'',
-     msg: message,
-     showType:'show',
-     height: 50,
-     style:{
-       left:0,
-       right:'',
-       top:'',
-       bottom:-document.body.scrollTop-document.documentElement.scrollTop,
-     }
-  });
-}
-</script>
-
-<script type="text/python">
-from browser import document, window, alert
-from javascript import console, JSObject
-import time
+from javascript import JSObject, console
+from browser import window, document, alert
 import sys
-import traceback
 import json
 import urllib.request
-import urllib.parse
+import time
+import traceback
+
+#this import causes loading to slow down.  See email
+# to Pierre on Dec 4th, 2014 for details..
+#import urllib.parse  
 
 import editor
+editors=editor.Editor('editortabs')
 
 sys.path.append('libs/FileSystem')
-import local_storage_fs as filesystem
-from FileSystemBase import FileSystemNode
 import FileObject
 
 _jquery=JSObject(window.jQuery)
-editors=editor.Editor('editortabs')
-
-#global fs
-fs=filesystem.FileSystem('/pyschool')
-window._FS=fs
 display_message=JSObject(window.display_message)
 
 sharelist={}
-document["pyconsole"].value=''  #clear console on load
 
 def run():
     #find selected Tab (and get its contents)
@@ -140,7 +85,7 @@ def toolbar_open_file_dialog():
     def cb(results):
         if results['status'] == 'Error':
            #display a message dialog instead..
-           alert(results['message'])
+           display_message(results['message'])
            return
 
         _filelist=results['filelist']
@@ -148,33 +93,33 @@ def toolbar_open_file_dialog():
            display_message('no files available')
            return
 
-        #console.log(_filelist)
         _jquery('#open_file_treegrid').treegrid('loadData', [_filelist])
         _jquery('#open_file_dialog').dialog('open')
 
     document['open_file_textbox'].value=''
     # go retrieve a list of files a person could open
-    fs.listdir('/', cb)
+    window._FS.listdir('/', cb)
 
 def open_file():
     def cb(results):
+        if results['status'] == 'Error':
+           display_message(results['message'])
+           return
         if results['status'] == 'Okay':
            fileobj=results.get('fileobj')
            if fileobj is None:  #there was an error (or file doesn't exist)
               #show message saying file .
               display_message('file not found')
-              #console.log('file not found')
            elif isinstance(fileobj, FileObject.FileObject):
               #open new tab with file contents
               editors.add_editor(filename=fileobj.get_attribute('filename'), 
                                  content=fileobj.get_attribute('contents'))
               display_message('file loaded successfully.')
-              #console.log('file loaded successfully.')
            else: #invalid fileobj, output error message
               display_message('Invalid file object.')
 
     _filename=document["open_file_textbox"].value
-    fs.read_file(_filename, cb)
+    window._FS.read_file(_filename, cb)
 
     _jquery('#open_file_dialog').dialog('close')
 
@@ -194,11 +139,9 @@ def open_url():
     if _data is None:  #there was an error (or URL doesn't exist)
        #show message saying file .
        display_message('URL not found')
-       #console.log('URL not found')
     elif isinstance(_data, str):
        #open new tab with file contents
-       editors.add_editor(filename=_filename, 
-                          content=_data)
+       editors.add_editor(filename=_filename, content=_data)
        display_message('file loaded successfully.')
     else: #invalid data, output error message
        display_message('Invalid URL.')
@@ -208,10 +151,8 @@ def save_file():
     def callback(_results):
         if _results['status'] == 'Okay':
            display_message(_results['message'])
-           #console.log('file saved successfully')
         else:
            display_message(_results['message'])
-           #console.log('error saving file')
 
     _filename=editors.getCurrentTabName()
     if _filename.startswith('Untitled-'):
@@ -230,17 +171,13 @@ def save_file():
     _f.set_attribute('filename', _filename)
     _f.set_attribute('contents', _src)
 
-    fs.save_file(_f, callback)
-
-def clear_outputs():
-    document["pyconsole"].value = ""
-    document["pydiv"].text = ""
+    window._FS.save_file(_f, callback)
 
 def parse_cookie():
-    _dict={}
     if document.cookie == '':
        return {}
 
+    _dict={}
     _items=document.cookie.split('|')
     for _item in _items:
         _variable, _value=_item.split('=')
@@ -249,10 +186,6 @@ def parse_cookie():
 
 
 def login():
-    #fix me..
-    #send userid/password
-    #receive token
-
     if window.login_type == 'authenticate':
        #send userid/password
        _userid=document["login_userid"].value
@@ -265,7 +198,6 @@ def login():
        _json=json.loads(_data)
        if _json['status'] == 'Okay':
           _jquery('#login_dialog').dialog('close')
-          #global fs
           import remote_storage_fs
           fs=remote_storage_fs.GoogleDataStorage("/pyschool")
           window._FS=fs
@@ -281,16 +213,17 @@ def login():
           return
 
        document["login_message"].text=_json["message"]
+       return
+    
+    import local_storage_fs
+    fs=local_storage_fs.FileSystem('/pyschool')
+    window._FS=fs
 
-    else:
-       document.cookie='login_type=guest'
-       _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
-       _jquery('#login_dialog').dialog('close')
-
+    document.cookie='login_type=guest'
+    _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
+    _jquery('#login_dialog').dialog('close')
 
 def signup():
-    #check that password and password2 are identical
-
     if len(document["signup_password"].value) < 6:
        #password must be at least 6 chars in length
        document["signup_message"].html="Password must be at least 6 characters in length"
@@ -318,29 +251,16 @@ def signup():
 
     document["signup_message"].html=_json["message"]
 
-def full_screen_toggle():
-    global _full_screen
-
-    if not _full_screen:
-       #fix me!
-       document.documentElement.mozRequestFullScreen()
-    else:
-       #fix me!
-       document.mozCancelFullScreen()
-
-    _full_screen=not _full_screen
-
-
 def sharelist_checkbox(fullname, obj):
     global sharelist
-    #console.log(fullname, obj.checked)
     if obj.checked:
        sharelist[fullname]='Y'
     else:
        sharelist[fullname]='N'
 
 def open_filelist_dialog():
-    global sharelist
+    console.log("open_filelist_dialog")
+    #global sharelist
     sharelist={}
 
     def onClickRow(record):
@@ -374,12 +294,21 @@ def share_filelist_save():
     # ask for file list again.. then repopulate data grid.
     open_filelist_dialog()
 
-_full_screen=False
+def open_file_onRowClicked(row):
+    if (row._isa_file):
+       document['open_file_textbox'].value=row.fullname
+
+_jquery('#open_file_treegrid').treegrid({'onClickRow': open_file_onRowClicked})
+
+def clear_outputs():
+    document['pyconsole'].value=''
+    document['pydiv'].value=''
 
 if 'script' in document.query:
    _script=document.query['script']
-   #document['open_url_textbox'].value=_script.replace('%2F', '/')
-   document['open_url_textbox'].value=urllib.parse.unquote(_script)
+   document['open_url_textbox'].value=_script.replace('%2F', '/')
+   #importing urllib.parse causes a 10-15 second slow down on Billy's machine
+   #document['open_url_textbox'].value=urllib.parse.unquote(_script)
    open_url()
 
 _cookie=parse_cookie()
@@ -389,18 +318,23 @@ if not 'login_type' in _cookie:
    _jquery('#login_dialog').dialog('open')
 elif _cookie['login_type'] == 'authenticate' and 'token' in _cookie:
    _jquery('#east').panel('header').find('div.panel-title').html('Storage: Remote (ie, Google Cloud)')
-   global fs
+
    import remote_storage_fs
    fs=remote_storage_fs.GoogleDataStorage("/pyschool")
+   window._FS=fs
    fs.set_token(_cookie['token'])
    window._token=_cookie['token']
 elif _cookie['login_type'] == 'guest':
+   import local_storage_fs
+   fs=local_storage_fs.FileSystem('/pyschool')
+   window._FS=fs
    _jquery('#east').panel('header').find('div.panel-title').html('Storage: localStorage')
 else:
    _jquery('#login_dialog').dialog('open')
 
-_jquery('#east-tabs').tabs('select', 1)  #allows pydiv panel to set width/height
+clear_outputs()
 
+_jquery('#east-tabs').tabs('select', 0)  #allows pydiv panel to set width/height
 
 window.run=run
 window.create_tab=create_tab
@@ -409,16 +343,56 @@ window.save_file=save_file
 window.open_url=open_url
 window.save_file_as=save_file_as
 window.toolbar_open_file_dialog=toolbar_open_file_dialog
-window.clear_outputs=clear_outputs
 window.login=login
-window.full_screen_toggle=full_screen_toggle
 window.signup=signup
 window.open_filelist_dialog=open_filelist_dialog
 window.share_filelist_save=share_filelist_save
 window.sharelist_checkbox=sharelist_checkbox
 </script>
 
+<script type="text/python" src="libs/importhooks/localstorage.py"></script>
+<script type="text/python" src="libs/importhooks/ShareHook.py"></script>
+<script type="text/python" src="libs/importhooks/FileSystemHook.py"></script>
+
 <script type="text/javascript">
+$(function(){
+       $(window).resize(function(){
+          $('#container').layout('resize');
+       });
+           
+       $('#open_file_dialog').dialog('close');
+       $('#save_file_as_dialog').dialog('close');
+       $('#open_url_dialog').dialog('close');
+
+       //eventually remove this line once database, etc are finished..
+       $('#login_dialog').dialog('close');
+       $('#signup_dialog').dialog('close');
+       $('#share_filelist_dialog').dialog('close');
+});
+
+function display_message(message){
+  $.messager.show({
+     title:'',
+     msg: message,
+     showType:'show',
+     height: 50,
+     style:{left:0, right:'', top:'',
+       bottom:-document.body.scrollTop-document.documentElement.scrollTop,
+     }
+  });
+}
+
+window._full_screen=false
+
+function full_screen_toggle() {
+    if (!window._full_screen) {
+       document.documentElement.mozRequestFullScreen()
+    } else {
+       document.mozCancelFullScreen()
+    }
+    window._full_screen=! window._full_screen
+}
+
 // easyui (data-options) cannot bind event functions defined via brython, 
 // so we must define the function in javascript instead
 function login_type_onChange(e) {
@@ -477,11 +451,14 @@ function formatCheckBox(value, row) {
         <div class="easyui-tabs" id="editortabs" data-options="tools:'#tab-tools',fit:true">
             <div id="west" title="Welcome" data-options="closable:true">
                <div id="welcome" class="editclass">
-                   <h2>Welcome to PySchool.net!</h2>
-                   <p>
-                   Click <img style="width:16px;height:16px" 
+                 <div style="background:green;color:white;padding:5px;font-family:Arial;font-size:20px">
+                    <h2>Welcome to PySchool.net!</h2>
+                    <p>
+                   Click <img style="width:20px;height:20px" 
                               src="css/icons/document-new.svg"> 
                    to open a new tab and start coding!
+                 </div>
+                 <div style="padding:5px;font-size:15px;font-family:Arial">
                    <hr>
                    <h3>Additional Help/Resources</h3>
                    Hover your mouse over any of the toolbar icons to get a basic description.
@@ -513,6 +490,7 @@ function formatCheckBox(value, row) {
                          </pre>
                      </ul>
                  Also, feel free to check out the <a href="gallery/index.html" target="_blank">gallery</a>
+                 </div>
                </div>
             </div>
         </div>

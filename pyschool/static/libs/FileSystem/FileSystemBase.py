@@ -1,6 +1,8 @@
 import json
 from javascript import console
 import FileObject
+#from .FileObject import FileObject
+#from . import FileObject
 
 import datetime
 
@@ -39,7 +41,6 @@ class FileSystem:
       self._root=root
 
   def _prefix_check(self, name):
-      #console.log("_prefix_check:%s" % name)
       if name.startswith(self._root):
          return name
 
@@ -125,6 +126,7 @@ class FileSystem:
 
   def save_file(self, fileobj, callback):
       assert isinstance(fileobj, FileObject.FileObject)
+      #assert isinstance(fileobj, FileObject)
 
       _filename=fileobj.get_filename()
       assert _filename is not None

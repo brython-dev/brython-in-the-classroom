@@ -44,6 +44,7 @@ class RemoteFileSystem(FileSystemBase.FileSystem):
 
       try:
         _f=FileObject.FileObject()
+        #_f=FileSystemBase.FileObject()
         _f.from_json(_json['fileobj'])
         return {'status': 'Okay', 'fileobj': _f}
       except Exception as e:

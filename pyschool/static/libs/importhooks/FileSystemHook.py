@@ -1,5 +1,5 @@
 from browser import window
-from javascript import console, JSObject
+from javascript import JSObject
 
 import sys
 sys.path.append("../FileSystem")
