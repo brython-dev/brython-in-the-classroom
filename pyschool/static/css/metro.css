@@ -2068,7 +2068,8 @@
   -moz-border-radius: 0px 0px 0px 0px;
   -webkit-border-radius: 0px 0px 0px 0px;
   border-radius: 0px 0px 0px 0px;
-  background: #eee;
+  ##background: #eee;
+  background: #fff;
   -moz-box-shadow: 2px 2px 3px #ededed;
   -webkit-box-shadow: 2px 2px 3px #ededed;
   box-shadow: 2px 2px 3px #ededed;
