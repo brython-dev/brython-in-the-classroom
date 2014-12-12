@@ -36,7 +36,6 @@ class FileSystem(FileSystemBase.FileSystem):
       """ retrieves file from storage, returns fileobj if successful,
           return None if unsuccessful
       """
-      print(filename)
       try:
         _json=storage[filename]
       except KeyError:
