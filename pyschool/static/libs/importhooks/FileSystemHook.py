@@ -1,3 +1,4 @@
+import BaseHook
 from browser import window
 from javascript import JSObject
 
@@ -7,10 +8,9 @@ sys.path.append("../FileSystem")
 import FileObject
 
 #define my custom import hook (just to see if it get called etc).
-class FileSystemHook:
+class FileSystemHook(BaseHook.BaseHook):
   def __init__(self, fullname, path):
-      self._fullname=fullname
-      self._path=path
+      BaseHook.BaseHook.__init__(self, fullname, path)
 
       if not path.startswith('/pyschool'):
          raise ImportError
@@ -22,8 +22,8 @@ class FileSystemHook:
       fs=JSObject(window._FS)
 
       for _ext in ('.py', '/__init__.py'):
-          _modpath='%s/%s%s' % (self._path, self._fullname, _ext)
-          _msg=fs._read_file(_modpath)
+          self._modpath='%s/%s%s' % (self._path, self._fullname, _ext)
+          _msg=fs._read_file(self._modpath)
 
           if _msg['status'] == 'Okay':
              self._module=_msg['fileobj'].get_attribute('contents')
@@ -31,11 +31,5 @@ class FileSystemHook:
     
       #if we got here, we couldn't find the module
       raise ImportError
-      
-  def load_module(self, name):
-      return self._module
-
-# we probably want to add this to sys.meta_path, so lets just do it for the
-# user
 
 sys.meta_path.append(FileSystemHook)
