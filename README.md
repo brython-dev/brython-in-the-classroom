@@ -8,7 +8,7 @@ access python resources.
 pyschool
 ---------
 
-[pyschool](http://pyschool.net) is a user friendly web based python code editor.
+pyschool is a user friendly web based python code editor.
 
 pyschool is powered by [brython](http://brython.info), a python compiler 
 written in javascript and developed for a web browser environment.
